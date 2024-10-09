@@ -118,10 +118,10 @@ async function sendToWebhook(studio, telegramId) {
 }
 
 // Функция для отправки данных в Airtable
-async function sendToAirtable(name, email, phone, tgId, invId, prId) {
+async function sendToAirtable(name, email, phone, tgId, tag) {
   const apiKey = process.env.AIRTABLE_API_KEY;
   const baseId = process.env.AIRTABLE_BASE_ID;
-  const tableId = process.env.AIRTABLE_TABLE_ID;
+  const tableId = process.env.AIRTABLE_LEADS_ID;
 
   const url = `https://api.airtable.com/v0/${baseId}/${tableId}`;
   const headers = {
@@ -135,7 +135,7 @@ async function sendToAirtable(name, email, phone, tgId, invId, prId) {
       email: email,
       Phone: phone,
       tgId: tgId,
-      Tag: "Webinar",
+      Tag: tag,
       inv_id: invId, // Добавляем inv_id
       price_id: prId,
     },
@@ -305,6 +305,16 @@ bot.on("callback_query:data", async (ctx) => {
             callback_data: "personal_training",
           }),
       });
+
+      // Отправляем данные в Airtable
+      await sendToAirtable(
+        session.name, // Имя пользователя
+        session.email, // Email пользователя
+        session.phone, // Телефон пользователя
+        ctx.from.id, // Telegram ID пользователя
+        "Заявка на тренировку" // Тег для записи
+      );
+
       session.step = "awaiting_training_type";
       await session.save(); // Сохранение сессии после изменения шага
     }
@@ -344,6 +354,8 @@ bot.on("callback_query:data", async (ctx) => {
     await ctx.reply(`Перейдите по ссылке для оплаты: ${paymentLink}`);
     session.step = "completed";
     await session.save();
+    // Отправляем данные о депозите в Airtable
+    await sendToAirtable(tgId, paymentId, sum, 0, "deposit");
   }
 });
 
