@@ -136,8 +136,6 @@ async function sendToAirtable(name, email, phone, tgId, tag) {
       Phone: phone,
       tgId: tgId,
       Tag: tag,
-      inv_id: invId, // Добавляем inv_id
-      price_id: prId,
     },
   };
 
