@@ -118,7 +118,7 @@ async function sendToWebhook(studio, telegramId) {
 }
 
 // Функция для отправки данных в Airtable
-async function sendToAirtable(name, email, phone, tgId, tag) {
+async function sendToAirtable(name, email, phone, tgId, city, studio) {
   const apiKey = process.env.AIRTABLE_API_KEY;
   const baseId = process.env.AIRTABLE_BASE_ID;
   const tableId = process.env.AIRTABLE_LEADS_ID;
@@ -135,7 +135,8 @@ async function sendToAirtable(name, email, phone, tgId, tag) {
       email: email,
       Phone: phone,
       tgId: tgId,
-      Tag: tag,
+      City: city,
+      Studio: studio,
     },
   };
 
@@ -310,7 +311,8 @@ bot.on("callback_query:data", async (ctx) => {
         session.email, // Email пользователя
         session.phone, // Телефон пользователя
         ctx.from.id, // Telegram ID пользователя
-        "Заявка на тренировку" // Тег для записи
+        session.city, // Телефон пользователя
+        session.studio // Телефон пользователя
       );
 
       session.step = "awaiting_training_type";
