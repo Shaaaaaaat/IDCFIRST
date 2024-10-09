@@ -295,7 +295,7 @@ bot.on("callback_query:data", async (ctx) => {
     let city;
     let studiosKeyboard;
     if (action === "city_moscow") {
-      city = "Москваs";
+      city = "Москва";
       // Кнопки для студий в Москве
       studiosKeyboard = new InlineKeyboard().add({
         text: "Студия на м. 1905г.",
@@ -459,7 +459,7 @@ bot.on("callback_query:data", async (ctx) => {
     session.step = "completed";
     await session.save();
     // Отправляем данные в Airtable
-    await sendToAirtable(tgId, paymentId, sum, lessons, tag);
+    await sendTwoToAirtable(tgId, paymentId, sum, lessons, tag);
   }
 });
 
