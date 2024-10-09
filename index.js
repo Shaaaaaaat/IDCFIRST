@@ -1,5 +1,5 @@
 require("dotenv").config();
-const { Bot, InlineKeyboard, Keyboard } = require("grammy");
+const { Bot, InlineKeyboard, Keyboard, session } = require("grammy");
 const express = require("express");
 const bodyParser = require("body-parser");
 const crypto = require("crypto");
@@ -55,7 +55,7 @@ async function createStripePrice() {
   return price.id;
 }
 
-async function generatePaymentLinkForStudio(city, studio, email) {
+async function generatePaymentLinkForStudio(studio, email) {
   const studioInfo = studioDetails[studio];
 
   if (!studioInfo) {
@@ -65,10 +65,11 @@ async function generatePaymentLinkForStudio(city, studio, email) {
   const paymentId = generateUniqueId(); // Генерируем уникальный ID для платежа
   const sum = studioInfo.price;
   const currency = studioInfo.currency;
+  const e = email;
 
   if (studioInfo.paymentSystem === "robokassa") {
     // Генерация ссылки для Robokassa
-    return generatePaymentLink(paymentId, sum, email);
+    return generatePaymentLink(paymentId, sum, e);
   } else if (studioInfo.paymentSystem === "stripe") {
     // Генерация ссылки для Stripe
     const priceId = await createStripePrice(studioInfo.price, currency, studio);
@@ -448,8 +449,8 @@ bot.on("callback_query:data", async (ctx) => {
   } else if (action.startsWith("day")) {
     const buttonText = action.split(",")[1];
     // const paymentId = generateUniqueId();
-    const email = session.email;
-    generatePaymentLinkForStudio(session.city, session.studio, email);
+
+    generatePaymentLinkForStudio(session.studio, session.email);
 
     // const paymentLink = generatePaymentLink(paymentId, sum, email);
     await ctx.reply(
