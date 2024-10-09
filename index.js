@@ -463,7 +463,7 @@ bot.on("callback_query:data", async (ctx) => {
     session.step = "completed";
     await session.save();
     // Отправляем данные в Airtable
-    await sendTwoToAirtable(tgId, paymentId, sum, lessons, tag);
+    await sendTwoToAirtable(ctx.from.id, paymentId, sum, lessons, tag);
   }
 });
 
