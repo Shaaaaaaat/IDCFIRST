@@ -228,9 +228,9 @@ async function sendToAirtable(name, email, phone, tgId, city, studio) {
 async function sendTwoToAirtable(tgId, invId, sum, lessons, tag) {
   const apiKey = process.env.AIRTABLE_API_KEY;
   const baseId = process.env.AIRTABLE_BASE_ID;
-  const tableId = process.env.AIRTABLE_LEADS_ID;
+  const firstId = process.env.AIRTABLE_FIRST_ID;
 
-  const url = `https://api.airtable.com/v0/${baseId}/${tableId}`;
+  const url = `https://api.airtable.com/v0/${baseId}/${firstId}`;
   const headers = {
     Authorization: `Bearer ${apiKey}`,
     "Content-Type": "application/json",
