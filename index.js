@@ -69,11 +69,13 @@ async function generatePaymentLinkForStudio(studio, email) {
 
   if (studioInfo.paymentSystem === "robokassa") {
     // Генерация ссылки для Robokassa
-    return generatePaymentLink(paymentId, sum, e);
+    const paymentLink = generatePaymentLink(paymentId, sum, e);
+    return { paymentLink, paymentId };
   } else if (studioInfo.paymentSystem === "stripe") {
     // Генерация ссылки для Stripe
     const priceId = await createStripePrice(studioInfo.price, currency, studio);
-    return createStripePaymentLink(priceId);
+    const paymentLink = await createStripePaymentLink(priceId, paymentId);
+    return { paymentLink, paymentId };
   } else {
     throw new Error("Неизвестная платёжная система");
   }
@@ -448,21 +450,23 @@ bot.on("callback_query:data", async (ctx) => {
     }
   } else if (action.startsWith("day")) {
     const buttonText = action.split(",")[1];
-    // const paymentId = generateUniqueId();
 
-    const paymentLink = await generatePaymentLinkForStudio(
+    // Генерация ссылки на оплату и получение paymentId
+    const { paymentLink, paymentId } = await generatePaymentLinkForStudio(
       session.studio,
       session.email
     );
 
-    // const paymentLink = generatePaymentLink(paymentId, sum, email);
     await ctx.reply(
       `Отлично! Вы выбрали: ${buttonText}\nДля подтверждения записи оплатите, пожалуйста, тренировку по ссылке ниже.\n\nПосле оплаты вы получите сообщение с подтверждением записи.`
     );
     await ctx.reply(`Перейдите по ссылке для оплаты: ${paymentLink}`);
     session.step = "completed";
     await session.save();
-    // Отправляем данные в Airtable
+    // Отправка данных в Airtable
+    const sum = studioDetails[session.studio].price;
+    const lessons = 1;
+    const tag = studioDetails[session.studio].tag; // Берем тег из студии
     await sendTwoToAirtable(ctx.from.id, paymentId, sum, lessons, tag);
   }
 });
