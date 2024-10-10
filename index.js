@@ -450,7 +450,7 @@ bot.on("callback_query:data", async (ctx) => {
     const buttonText = action.split(",")[1];
     // const paymentId = generateUniqueId();
 
-    const paymentLink = generatePaymentLinkForStudio(
+    const paymentLink = await generatePaymentLinkForStudio(
       session.studio,
       session.email
     );
