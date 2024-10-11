@@ -195,9 +195,9 @@ async function sendToWebhook(studio, telegramId) {
 async function sendFirstAirtable(tgId, name, nickname) {
   const apiKey = process.env.AIRTABLE_API_KEY;
   const baseId = process.env.AIRTABLE_BASE_ID;
-  const tableId = process.env.AIRTABLE_IDS_ID;
+  const idId = process.env.AIRTABLE_IDS_ID;
 
-  const url = `https://api.airtable.com/v0/${baseId}/${tableId}`;
+  const url = `https://api.airtable.com/v0/${baseId}/${idId}`;
   const headers = {
     Authorization: `Bearer ${apiKey}`,
     "Content-Type": "application/json",
@@ -258,7 +258,7 @@ async function sendToAirtable(name, email, phone, tgId, city, studio) {
 async function sendTwoToAirtable(tgId, invId, sum, lessons, tag, date, nick) {
   const apiKey = process.env.AIRTABLE_API_KEY;
   const baseId = process.env.AIRTABLE_BASE_ID;
-  const firstId = process.env.AIRTABLE_FIRST_ID;
+  const buyId = process.env.AIRTABLE_BUY_ID;
 
   const url = `https://api.airtable.com/v0/${baseId}/${firstId}`;
   const headers = {
