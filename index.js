@@ -260,7 +260,7 @@ async function sendTwoToAirtable(tgId, invId, sum, lessons, tag, date, nick) {
   const baseId = process.env.AIRTABLE_BASE_ID;
   const buyId = process.env.AIRTABLE_BUY_ID;
 
-  const url = `https://api.airtable.com/v0/${baseId}/${firstId}`;
+  const url = `https://api.airtable.com/v0/${baseId}/${buyId}`;
   const headers = {
     Authorization: `Bearer ${apiKey}`,
     "Content-Type": "application/json",
