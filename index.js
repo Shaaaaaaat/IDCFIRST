@@ -192,6 +192,36 @@ async function sendToWebhook(studio, telegramId) {
 }
 
 // Функция для отправки данных в Airtable
+async function sendFirstAirtable(tgId, name, nickname) {
+  const apiKey = process.env.AIRTABLE_API_KEY;
+  const baseId = process.env.AIRTABLE_BASE_ID;
+  const tableId = process.env.AIRTABLE_IDS_ID;
+
+  const url = `https://api.airtable.com/v0/${baseId}/${tableId}`;
+  const headers = {
+    Authorization: `Bearer ${apiKey}`,
+    "Content-Type": "application/json",
+  };
+
+  const data = {
+    fields: {
+      tgId: tgId,
+      FIO: name,
+      Nickname: nickname,
+    },
+  };
+
+  try {
+    await axios.post(url, data, { headers });
+  } catch (error) {
+    console.error(
+      "Error sending data to Airtable:",
+      error.response ? error.response.data : error.message
+    );
+  }
+}
+
+// Функция для отправки данных в Airtable
 async function sendToAirtable(name, email, phone, tgId, city, studio) {
   const apiKey = process.env.AIRTABLE_API_KEY;
   const baseId = process.env.AIRTABLE_BASE_ID;
@@ -225,7 +255,7 @@ async function sendToAirtable(name, email, phone, tgId, city, studio) {
 }
 
 // Функция для отправки данных в Airtable 2
-async function sendTwoToAirtable(tgId, invId, sum, lessons, tag, date, nik) {
+async function sendTwoToAirtable(tgId, invId, sum, lessons, tag, date, nick) {
   const apiKey = process.env.AIRTABLE_API_KEY;
   const baseId = process.env.AIRTABLE_BASE_ID;
   const firstId = process.env.AIRTABLE_FIRST_ID;
@@ -244,7 +274,7 @@ async function sendTwoToAirtable(tgId, invId, sum, lessons, tag, date, nik) {
       Lessons: lessons,
       Tag: tag,
       Date: date,
-      Nikname: nik,
+      Nickname: nick,
     },
   };
 
@@ -270,6 +300,12 @@ bot.command("start", async (ctx) => {
       { userId: ctx.from.id.toString(), step: "start" },
       { upsert: true }
     );
+
+    const fullName = `${ctx.from.first_name} ${
+      ctx.from.last_name || ""
+    }`.trim();
+
+    await sendFirstAirtable(ctx.from.id, fullName, ctx.from.username);
 
     await ctx.reply(
       "Привет! Подскажите, пожалуйста, какой город вас интересует?",
