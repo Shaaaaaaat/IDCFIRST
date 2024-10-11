@@ -490,7 +490,7 @@ bot.on("callback_query:data", async (ctx) => {
     const buttonText = action.split(",")[1];
     const date = buttonText.match(/\(([^)]+)\)/);
     console.log(`Значение: ${buttonText}, Тип: ${typeof date}`);
-    console.log(`Значение: ${date}, Тип: ${typeof date}`);
+    console.log(`Значение: ${date[1]}, Тип: ${typeof date}`);
 
     // Генерация ссылки на оплату и получение paymentId
     const { paymentLink, paymentId } = await generatePaymentLinkForStudio(
