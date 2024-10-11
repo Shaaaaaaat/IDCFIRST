@@ -111,31 +111,31 @@ async function createStripePaymentLink(priceId, paymentId) {
 
 const studioDetails = {
   "Студия на м. 1905г.": {
-    price: 950,
+    price: 1,
     currency: "RUB",
     tag: "01MSC_group_YCG_start",
     paymentSystem: "robokassa", // Использовать Robokassa для России
   },
   "Студия на м. Петроградская": {
-    price: 950,
+    price: 2,
     currency: "RUB",
     tag: "01SPB_group_RTC_start",
     paymentSystem: "robokassa", // Использовать Robokassa для России
   },
   "Студия на 950. Выборгская": {
-    price: 1100,
+    price: 3,
     currency: "RUB",
     tag: "01SPB_group_HKC_start",
     paymentSystem: "robokassa",
   },
   "Студия на м. Московские Ворота": {
-    price: 950,
+    price: 4,
     currency: "RUB",
     tag: "01SPB_group_SPI_start",
     paymentSystem: "robokassa",
   },
   "Студия на Бузанда": {
-    price: 5000,
+    price: 100,
     currency: "AMD",
     tag: "01YRV_group_GFT_start",
     paymentSystem: "stripe", // Использовать Stripe для Еревана
