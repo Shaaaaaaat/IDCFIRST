@@ -225,7 +225,7 @@ async function sendToAirtable(name, email, phone, tgId, city, studio) {
 }
 
 // Функция для отправки данных в Airtable 2
-async function sendTwoToAirtable(tgId, invId, sum, lessons, tag, date) {
+async function sendTwoToAirtable(tgId, invId, sum, lessons, tag, date, nik) {
   const apiKey = process.env.AIRTABLE_API_KEY;
   const baseId = process.env.AIRTABLE_BASE_ID;
   const firstId = process.env.AIRTABLE_FIRST_ID;
@@ -244,6 +244,7 @@ async function sendTwoToAirtable(tgId, invId, sum, lessons, tag, date) {
       Lessons: lessons,
       Tag: tag,
       Date: date,
+      Nikname: nik,
     },
   };
 
@@ -469,7 +470,15 @@ bot.on("callback_query:data", async (ctx) => {
     const sum = studioDetails[session.studio].price;
     const lessons = 1;
     const tag = studioDetails[session.studio].tag; // Берем тег из студии
-    await sendTwoToAirtable(ctx.from.id, paymentId, sum, lessons, tag, date);
+    await sendTwoToAirtable(
+      ctx.from.id,
+      paymentId,
+      sum,
+      lessons,
+      tag,
+      date,
+      ctx.from.username
+    );
   }
 });
 
