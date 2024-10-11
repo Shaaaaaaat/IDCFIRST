@@ -225,7 +225,7 @@ async function sendToAirtable(name, email, phone, tgId, city, studio) {
 }
 
 // Функция для отправки данных в Airtable 2
-async function sendTwoToAirtable(tgId, invId, sum, lessons, tag) {
+async function sendTwoToAirtable(tgId, invId, sum, lessons, tag, date) {
   const apiKey = process.env.AIRTABLE_API_KEY;
   const baseId = process.env.AIRTABLE_BASE_ID;
   const firstId = process.env.AIRTABLE_FIRST_ID;
@@ -243,6 +243,7 @@ async function sendTwoToAirtable(tgId, invId, sum, lessons, tag) {
       Sum: sum,
       Lessons: lessons,
       Tag: tag,
+      Date: date,
     },
   };
 
@@ -450,6 +451,7 @@ bot.on("callback_query:data", async (ctx) => {
     }
   } else if (action.startsWith("day")) {
     const buttonText = action.split(",")[1];
+    const date = buttonText.match(/\(([^)]+)\)/);
 
     // Генерация ссылки на оплату и получение paymentId
     const { paymentLink, paymentId } = await generatePaymentLinkForStudio(
@@ -467,7 +469,7 @@ bot.on("callback_query:data", async (ctx) => {
     const sum = studioDetails[session.studio].price;
     const lessons = 1;
     const tag = studioDetails[session.studio].tag; // Берем тег из студии
-    await sendTwoToAirtable(ctx.from.id, paymentId, sum, lessons, tag);
+    await sendTwoToAirtable(ctx.from.id, paymentId, sum, lessons, tag, date);
   }
 });
 
@@ -573,19 +575,7 @@ bot.on("message:text", async (ctx) => {
 
     session.step = "awaiting_confirmation";
     await session.save(); // Сохранение сессии после изменения шага
-  }
-  // else if (session.step === "awaiting_confirmation") {
-  //   if (ctx.message.text === "Все верно") {
-  //     await ctx.reply("Выберите тип карты для оплаты:", {
-  //       reply_markup: new InlineKeyboard()
-  //         .add({ text: "Российская (990₽)", callback_data: "rubles" })
-  //         .add({ text: "Зарубежная (10€)", callback_data: "euros" }),
-  //     });
-  //     session.step = "awaiting_payment_type";
-  //     await session.save(); // Сохранение сессии после изменения шага
-  //   }
-  // }
-  else if (session.step.startsWith("awaiting_edit_")) {
+  } else if (session.step.startsWith("awaiting_edit_")) {
     const field = session.step.replace("awaiting_edit_", "");
     if (field === "name") {
       session.name = ctx.message.text;
