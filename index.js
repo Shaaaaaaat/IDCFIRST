@@ -212,10 +212,41 @@ async function sendFirstAirtable(tgId, name, nickname) {
   };
 
   try {
-    await axios.post(url, data, { headers });
+    const response = await axios.post(url, data, { headers });
+    return response.data.id; // Возвращаем идентификатор записи
+    // await axios.post(url, data, { headers });
   } catch (error) {
     console.error(
       "Error sending data to Airtable:",
+      error.response ? error.response.data : error.message
+    );
+  }
+}
+
+// Функция для обновления записи в Airtable
+async function updateAirtableRecord(id, city, studio) {
+  const apiKey = process.env.AIRTABLE_API_KEY;
+  const baseId = process.env.AIRTABLE_BASE_ID;
+  const tableId = process.env.AIRTABLE_IDS_ID;
+
+  const url = `https://api.airtable.com/v0/${baseId}/${tableId}/${id}`;
+  const headers = {
+    Authorization: `Bearer ${apiKey}`,
+    "Content-Type": "application/json",
+  };
+
+  const data = {
+    fields: {
+      City: city,
+      Studio: studio,
+    },
+  };
+
+  try {
+    await axios.patch(url, data, { headers }); // Используем PATCH для обновления
+  } catch (error) {
+    console.error(
+      "Error updating data in Airtable:",
       error.response ? error.response.data : error.message
     );
   }
@@ -305,7 +336,17 @@ bot.command("start", async (ctx) => {
       ctx.from.last_name || ""
     }`.trim();
 
-    await sendFirstAirtable(ctx.from.id, fullName, ctx.from.username);
+    // Сохраняем идентификатор записи в сессии
+    const airtableId = await sendFirstAirtable(
+      ctx.from.id,
+      fullName,
+      ctx.from.username
+    );
+    const session = await Session.findOne({ userId: ctx.from.id.toString() });
+    session.airtableId = airtableId; // Сохраняем airtableId в сессии
+    await session.save();
+
+    // await sendFirstAirtable(ctx.from.id, fullName, ctx.from.username);
 
     await ctx.reply(
       "Привет! Подскажите, пожалуйста, какой город вас интересует?",
@@ -390,6 +431,9 @@ bot.on("callback_query:data", async (ctx) => {
     // Сохраняем выбранную студию в сессии
     session.studio = studio;
     await session.save();
+
+    // Обновляем запись в Airtable
+    await updateAirtableRecord(session.airtableId, session.city, studio);
 
     // Отправляем сообщение с выбором студии
     await ctx.reply(

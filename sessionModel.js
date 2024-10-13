@@ -7,6 +7,7 @@ const sessionSchema = new mongoose.Schema({
   email: { type: String, default: "" },
   step: { type: String, default: "" },
   city: { type: String, default: "" },
+  airtableId: { type: String, default: "" },
   studio: { type: String, default: "" },
   paymentStatus: { type: String, default: "" },
   paymentId: { type: String, default: "", index: true }, // Индекс для быстрого поиска
