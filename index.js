@@ -534,6 +534,7 @@ bot.on("callback_query:data", async (ctx) => {
     const buttonText = action.split(",")[1];
     const date = buttonText.match(/\(([^)]+)\)/);
     const str = JSON.stringify(date[1]);
+    console.log(date);
     console.log(str);
 
     // Генерация ссылки на оплату и получение paymentId
