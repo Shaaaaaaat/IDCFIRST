@@ -534,8 +534,7 @@ bot.on("callback_query:data", async (ctx) => {
     const buttonText = action.split(",")[1];
     const date = buttonText.match(/\(([^)]+)\)/);
     const str = JSON.stringify(date[1]);
-    console.log(date);
-    console.log(str);
+    const str2 = JSON.parse(str);
 
     // Генерация ссылки на оплату и получение paymentId
     const { paymentLink, paymentId } = await generatePaymentLinkForStudio(
@@ -559,7 +558,7 @@ bot.on("callback_query:data", async (ctx) => {
       sum,
       lessons,
       tag,
-      str,
+      str2,
       ctx.from.username
     );
   }
