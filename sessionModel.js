@@ -12,6 +12,7 @@ const sessionSchema = new mongoose.Schema({
   paymentStatus: { type: String, default: "" },
   paymentId: { type: String, default: "", index: true }, // Индекс для быстрого поиска
   newPrice: { type: String, default: "" },
+  laterDate: { type: String, default: "" },
 });
 
 const Session = mongoose.model("Session", sessionSchema);

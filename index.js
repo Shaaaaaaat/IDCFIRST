@@ -515,9 +515,6 @@ bot.on("callback_query:data", async (ctx) => {
       // Отправляем данные на вебхук
       await sendToWebhook(studio, telegramId);
 
-      // Ответ пользователю
-      await ctx.reply("Загружаю расписание");
-
       // Сохраняем шаг, если нужно
       session.step = "awaiting_next_step";
       await session.save();
@@ -664,11 +661,23 @@ bot.on("message:text", async (ctx) => {
       // Используйте setTimeout или node-cron для напоминания
       const reminderTime = reminderDate.getTime() - Date.now();
       if (reminderTime > 0) {
+        await ctx.reply(
+          `Хорошо, я свяжусь с вами за два дня до выбранной даты, то есть ${reminderDate}`
+        );
         setTimeout(async () => {
           await ctx.reply(
-            `Напоминаю, что вы запланировали тренировку на ${userMessage}. Выберите дату занятия:`
+            `Напоминаю, что вы запланировали тренировку на ${userMessage}. Выберите точную дату занятия:`
           );
-          // Здесь можно повторно отобразить выбор дней
+          // Получаем данные студии из сессии и telegram_id
+          const studio = session.studio; // Берем студию из сессии
+          const telegramId = ctx.from.id; // ID пользователя Telegram
+
+          // Отправляем данные на вебхук
+          await sendToWebhook(studio, telegramId);
+
+          // Сохраняем шаг, если нужно
+          session.step = "awaiting_next_step";
+          await session.save();
         }, reminderTime);
       } else {
         await ctx.reply(
