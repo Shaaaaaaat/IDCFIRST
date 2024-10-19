@@ -657,10 +657,6 @@ bot.on("message:text", async (ctx) => {
       const reminderDate = new Date(date);
       reminderDate.setDate(reminderDate.getDate() - 2);
 
-      await ctx.reply(
-        `Хорошо, я свяжусь с вами за два дня до выбранной даты, то есть ${reminderDate}. До встречи!`
-      );
-
       // Сохраняем информацию о дате в сессии
       session.laterDate = userMessage;
       await session.save();
