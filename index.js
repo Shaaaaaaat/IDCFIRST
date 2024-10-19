@@ -561,6 +561,14 @@ bot.on("callback_query:data", async (ctx) => {
       str2,
       ctx.from.username
     );
+  } else if (action.startsWith("later")) {
+    await ctx.reply(
+      `Пожалуйста, пришлите ориентировочную дату, когда вы хотите прийти на тренировку, в формате дд.мм (например, 04.12). \nЗа два дня до этой даты я предоставлю повторный выбор дней из нашего расписания.`
+    );
+
+    // Сохраняем статус ожидания даты
+    session.step = "awaiting_later_date";
+    await session.save();
   }
 });
 
@@ -635,6 +643,47 @@ bot.on("message:text", async (ctx) => {
         ),
       }
     );
+  } else if (session.step === "awaiting_later_date") {
+    const userMessage = ctx.message.text;
+
+    // Проверяем формат даты (дд.мм)
+    const dateRegex = /^(0[1-9]|[12][0-9]|3[01])\.(0[1-9]|1[0-2])$/;
+    if (dateRegex.test(userMessage)) {
+      const [day, month] = userMessage.split(".");
+      const year = new Date().getFullYear();
+      const date = new Date(year, month - 1, day);
+
+      // Вычисляем дату напоминания (2 дня до выбранной даты)
+      const reminderDate = new Date(date);
+      reminderDate.setDate(reminderDate.getDate() - 2);
+
+      // Сохраняем информацию о дате в сессии
+      session.laterDate = userMessage;
+      await session.save();
+
+      // Используйте setTimeout или node-cron для напоминания
+      const reminderTime = reminderDate.getTime() - Date.now();
+      if (reminderTime > 0) {
+        setTimeout(async () => {
+          await ctx.reply(
+            `Напоминаю, что вы запланировали тренировку на ${userMessage}. Выберите дату занятия:`
+          );
+          // Здесь можно повторно отобразить выбор дней
+        }, reminderTime);
+      } else {
+        await ctx.reply(
+          "Выбрана дата уже прошла. Пожалуйста, выберите другую дату."
+        );
+      }
+
+      // Верните шаг к предыдущему состоянию или завершите сессию
+      session.step = "completed";
+      await session.save();
+    } else {
+      await ctx.reply(
+        "Неправильный формат даты. Пожалуйста, используйте формат дд.мм (например, 04.12)."
+      );
+    }
   } else if (session.step === "awaiting_name") {
     session.name = ctx.message.text;
     await ctx.reply(messages.enterPhone);
