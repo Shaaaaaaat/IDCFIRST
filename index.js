@@ -654,6 +654,9 @@ bot.on("message:text", async (ctx) => {
       const reminderDate = new Date(date);
       reminderDate.setDate(reminderDate.getDate() - 2);
 
+      // Устанавливаем фиксированное время на 12:30
+      reminderDate.setHours(12, 10, 0, 0); // Часы, минуты, секунды, миллисекунды
+
       // Сохраняем информацию о дате в сессии
       session.laterDate = userMessage;
       await session.save();
