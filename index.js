@@ -655,7 +655,16 @@ bot.on("message:text", async (ctx) => {
       reminderDate.setDate(reminderDate.getDate() - 2);
 
       // Устанавливаем фиксированное время на 12:30
-      reminderDate.setHours(12, 10, 0, 0); // Часы, минуты, секунды, миллисекунды
+      reminderDate.setHours(11, 17, 0, 0); // Часы, минуты, секунды, миллисекунды
+
+      // Допустим, часовой пояс пользователя передается в переменной userTimezoneOffset (например, +3 или -5)
+      const userTimezoneOffset = +3; // Пример: для Москвы установлено +3
+
+      reminderDate.setHours(
+        reminderDate.getHours() -
+          reminderDate.getTimezoneOffset() / 60 +
+          userTimezoneOffset
+      );
 
       // Сохраняем информацию о дате в сессии
       session.laterDate = userMessage;
