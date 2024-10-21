@@ -701,8 +701,11 @@ bot.on("message:text", async (ctx) => {
       await session.save();
     } else {
       await ctx.reply(
-        "Неправильный формат даты. Пожалуйста, используйте формат дд.мм (например, 04.12)."
+        "Неправильный формат даты. Пожалуйста, используйте формат дд.мм (пример: 04.12)."
       );
+
+      session.step = "awaiting_later_date";
+      await session.save();
     }
   } else if (session.step === "awaiting_name") {
     session.name = ctx.message.text;
