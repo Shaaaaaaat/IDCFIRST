@@ -542,9 +542,7 @@ bot.on("callback_query:data", async (ctx) => {
     await ctx.reply(
       `Отлично! Вы выбрали: ${buttonText}\nДля подтверждения записи оплатите, пожалуйста, тренировку по ссылке ниже.\n\nПосле оплаты вы получите сообщение с подтверждением записи.`
     );
-    await ctx.reply("Перейдите к оплате, нажав на кнопку ниже:", {
-      reply_markup: new InlineKeyboard().url("Оплатить", paymentLink),
-    });
+    await ctx.reply(`Перейдите по ссылке для оплаты: ${paymentLink}`);
     session.step = "completed";
     await session.save();
     // Отправка данных в Airtable
