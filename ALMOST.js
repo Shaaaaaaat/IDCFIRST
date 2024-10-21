@@ -1,5 +1,5 @@
 require("dotenv").config();
-const { Bot, InlineKeyboard, Keyboard } = require("grammy");
+const { Bot, InlineKeyboard, Keyboard, session } = require("grammy");
 const express = require("express");
 const bodyParser = require("body-parser");
 const crypto = require("crypto");
@@ -44,10 +44,10 @@ function generatePaymentLink(paymentId, sum, email) {
 }
 
 // Функция для создания объекта Price
-async function createPrice() {
+async function createStripePrice() {
   const price = await stripe.prices.create({
     unit_amount: 1000, // 10 евро в центах
-    currency: "eur",
+    currency: "amd",
     product_data: {
       name: "Webinar Registration",
     },
@@ -55,8 +55,46 @@ async function createPrice() {
   return price.id;
 }
 
-// Функция для создания ссылки на оплату
-async function createPaymentLink(priceId) {
+async function generatePaymentLinkForStudio(studio, email) {
+  const studioInfo = studioDetails[studio];
+
+  if (!studioInfo) {
+    throw new Error("Студия не найдена");
+  }
+
+  const paymentId = generateUniqueId(); // Генерируем уникальный ID для платежа
+  const sum = studioInfo.price;
+  const currency = studioInfo.currency;
+  const e = email;
+
+  if (studioInfo.paymentSystem === "robokassa") {
+    // Генерация ссылки для Robokassa
+    const paymentLink = generatePaymentLink(paymentId, sum, e);
+    return { paymentLink, paymentId };
+  } else if (studioInfo.paymentSystem === "stripe") {
+    // Генерация ссылки для Stripe
+    const priceId = await createStripePrice(studioInfo.price, currency, studio);
+    const paymentLink = await createStripePaymentLink(priceId, paymentId);
+    return { paymentLink, paymentId };
+  } else {
+    throw new Error("Неизвестная платёжная система");
+  }
+}
+
+// Функция для создания цены в Stripe
+async function createStripePrice(amount, currency, productName) {
+  const price = await stripe.prices.create({
+    unit_amount: amount * 100, // Stripe принимает сумму в минимальных единицах (центах)
+    currency: currency.toLowerCase(),
+    product_data: {
+      name: productName,
+    },
+  });
+  return price.id;
+}
+
+// Функция для создания ссылки на оплату через Stripe
+async function createStripePaymentLink(priceId, paymentId) {
   const paymentLink = await stripe.paymentLinks.create({
     line_items: [
       {
@@ -64,9 +102,45 @@ async function createPaymentLink(priceId) {
         quantity: 1,
       },
     ],
+    metadata: {
+      paymentId: paymentId, // Передаем идентификатор заказа
+    },
   });
   return paymentLink.url;
 }
+
+const studioDetails = {
+  "Студия на м. 1905г.": {
+    price: 1,
+    currency: "RUB",
+    tag: "01MSC_group_YCG_start",
+    paymentSystem: "robokassa", // Использовать Robokassa для России
+  },
+  "Студия на м. Петроградская": {
+    price: 2,
+    currency: "RUB",
+    tag: "01SPB_group_RTC_start",
+    paymentSystem: "robokassa", // Использовать Robokassa для России
+  },
+  "Студия на 950. Выборгская": {
+    price: 3,
+    currency: "RUB",
+    tag: "01SPB_group_HKC_start",
+    paymentSystem: "robokassa",
+  },
+  "Студия на м. Московские Ворота": {
+    price: 4,
+    currency: "RUB",
+    tag: "01SPB_group_SPI_start",
+    paymentSystem: "robokassa",
+  },
+  "Студия на Бузанда": {
+    price: 100,
+    currency: "AMD",
+    tag: "01YRV_group_GFT_start",
+    paymentSystem: "stripe", // Использовать Stripe для Еревана
+  },
+};
 
 // Функция для получения данных о ценах и расписании в зависимости от студии
 function getPriceAndSchedule(studio) {
@@ -118,6 +192,67 @@ async function sendToWebhook(studio, telegramId) {
 }
 
 // Функция для отправки данных в Airtable
+async function sendFirstAirtable(tgId, name, nickname) {
+  const apiKey = process.env.AIRTABLE_API_KEY;
+  const baseId = process.env.AIRTABLE_BASE_ID;
+  const idId = process.env.AIRTABLE_IDS_ID;
+
+  const url = `https://api.airtable.com/v0/${baseId}/${idId}`;
+  const headers = {
+    Authorization: `Bearer ${apiKey}`,
+    "Content-Type": "application/json",
+  };
+
+  const data = {
+    fields: {
+      tgId: tgId,
+      FIO: name,
+      Nickname: nickname,
+    },
+  };
+
+  try {
+    const response = await axios.post(url, data, { headers });
+    return response.data.id; // Возвращаем идентификатор записи
+    // await axios.post(url, data, { headers });
+  } catch (error) {
+    console.error(
+      "Error sending data to Airtable:",
+      error.response ? error.response.data : error.message
+    );
+  }
+}
+
+// Функция для обновления записи в Airtable
+async function updateAirtableRecord(id, city, studio) {
+  const apiKey = process.env.AIRTABLE_API_KEY;
+  const baseId = process.env.AIRTABLE_BASE_ID;
+  const tableId = process.env.AIRTABLE_IDS_ID;
+
+  const url = `https://api.airtable.com/v0/${baseId}/${tableId}/${id}`;
+  const headers = {
+    Authorization: `Bearer ${apiKey}`,
+    "Content-Type": "application/json",
+  };
+
+  const data = {
+    fields: {
+      City: city,
+      Studio: studio,
+    },
+  };
+
+  try {
+    await axios.patch(url, data, { headers }); // Используем PATCH для обновления
+  } catch (error) {
+    console.error(
+      "Error updating data in Airtable:",
+      error.response ? error.response.data : error.message
+    );
+  }
+}
+
+// Функция для отправки данных в Airtable
 async function sendToAirtable(name, email, phone, tgId, city, studio) {
   const apiKey = process.env.AIRTABLE_API_KEY;
   const baseId = process.env.AIRTABLE_BASE_ID;
@@ -151,12 +286,12 @@ async function sendToAirtable(name, email, phone, tgId, city, studio) {
 }
 
 // Функция для отправки данных в Airtable 2
-async function sendTwoToAirtable(tgId, invId, sum, lessons, tag) {
+async function sendTwoToAirtable(tgId, invId, sum, lessons, tag, date, nick) {
   const apiKey = process.env.AIRTABLE_API_KEY;
   const baseId = process.env.AIRTABLE_BASE_ID;
-  const tableId = process.env.AIRTABLE_LEADS_ID;
+  const buyId = process.env.AIRTABLE_BUY_ID;
 
-  const url = `https://api.airtable.com/v0/${baseId}/${tableId}`;
+  const url = `https://api.airtable.com/v0/${baseId}/${buyId}`;
   const headers = {
     Authorization: `Bearer ${apiKey}`,
     "Content-Type": "application/json",
@@ -169,6 +304,8 @@ async function sendTwoToAirtable(tgId, invId, sum, lessons, tag) {
       Sum: sum,
       Lessons: lessons,
       Tag: tag,
+      Date: date,
+      Nickname: nick,
     },
   };
 
@@ -194,6 +331,22 @@ bot.command("start", async (ctx) => {
       { userId: ctx.from.id.toString(), step: "start" },
       { upsert: true }
     );
+
+    const fullName = `${ctx.from.first_name} ${
+      ctx.from.last_name || ""
+    }`.trim();
+
+    // Сохраняем идентификатор записи в сессии
+    const airtableId = await sendFirstAirtable(
+      ctx.from.id,
+      fullName,
+      ctx.from.username
+    );
+    const session = await Session.findOne({ userId: ctx.from.id.toString() });
+    session.airtableId = airtableId; // Сохраняем airtableId в сессии
+    await session.save();
+
+    // await sendFirstAirtable(ctx.from.id, fullName, ctx.from.username);
 
     await ctx.reply(
       "Привет! Подскажите, пожалуйста, какой город вас интересует?",
@@ -224,7 +377,7 @@ bot.on("callback_query:data", async (ctx) => {
     let city;
     let studiosKeyboard;
     if (action === "city_moscow") {
-      city = "Москваs";
+      city = "Москва";
       // Кнопки для студий в Москве
       studiosKeyboard = new InlineKeyboard().add({
         text: "Студия на м. 1905г.",
@@ -278,6 +431,9 @@ bot.on("callback_query:data", async (ctx) => {
     // Сохраняем выбранную студию в сессии
     session.studio = studio;
     await session.save();
+
+    // Обновляем запись в Airtable
+    await updateAirtableRecord(session.airtableId, session.city, studio);
 
     // Отправляем сообщение с выбором студии
     await ctx.reply(
@@ -359,9 +515,6 @@ bot.on("callback_query:data", async (ctx) => {
       // Отправляем данные на вебхук
       await sendToWebhook(studio, telegramId);
 
-      // Ответ пользователю
-      await ctx.reply("Загружаю расписание");
-
       // Сохраняем шаг, если нужно
       session.step = "awaiting_next_step";
       await session.save();
@@ -376,18 +529,43 @@ bot.on("callback_query:data", async (ctx) => {
     }
   } else if (action.startsWith("day")) {
     const buttonText = action.split(",")[1];
-    const paymentId = generateUniqueId();
-    const email = session.email;
-    const sum = 950; // Стоимость групповой тренировки
-    const paymentLink = generatePaymentLink(paymentId, sum, email);
+    const date = buttonText.match(/\(([^)]+)\)/);
+    const str = JSON.stringify(date[1]);
+    const str2 = JSON.parse(str);
+
+    // Генерация ссылки на оплату и получение paymentId
+    const { paymentLink, paymentId } = await generatePaymentLinkForStudio(
+      session.studio,
+      session.email
+    );
+
     await ctx.reply(
       `Отлично! Вы выбрали: ${buttonText}\nДля подтверждения записи оплатите, пожалуйста, тренировку по ссылке ниже.\n\nПосле оплаты вы получите сообщение с подтверждением записи.`
     );
     await ctx.reply(`Перейдите по ссылке для оплаты: ${paymentLink}`);
     session.step = "completed";
     await session.save();
-    // Отправляем данные в Airtable
-    await sendToAirtable(tgId, paymentId, sum, lessons, tag);
+    // Отправка данных в Airtable
+    const sum = studioDetails[session.studio].price;
+    const lessons = 1;
+    const tag = studioDetails[session.studio].tag; // Берем тег из студии
+    await sendTwoToAirtable(
+      ctx.from.id,
+      paymentId,
+      sum,
+      lessons,
+      tag,
+      str2,
+      ctx.from.username
+    );
+  } else if (action.startsWith("later")) {
+    await ctx.reply(
+      `Пожалуйста, укажите ориентировочную дату тренировки в формате дд.мм.\nЗа два дня до этой даты я вышлю актуальное расписание для выбора дня.`
+    );
+
+    // Сохраняем статус ожидания даты
+    session.step = "awaiting_later_date";
+    await session.save();
   }
 });
 
@@ -462,6 +640,75 @@ bot.on("message:text", async (ctx) => {
         ),
       }
     );
+  } else if (session.step === "awaiting_later_date") {
+    const userMessage = ctx.message.text;
+
+    // Проверяем формат даты (дд.мм)
+    const dateRegex = /^(0[1-9]|[12][0-9]|3[01])\.(0[1-9]|1[0-2])$/;
+    if (dateRegex.test(userMessage)) {
+      const [day, month] = userMessage.split(".");
+      const year = new Date().getFullYear();
+      const date = new Date(year, month - 1, day);
+
+      // Вычисляем дату напоминания (2 дня до выбранной даты)
+      const reminderDate = new Date(date);
+      reminderDate.setDate(reminderDate.getDate() - 2);
+
+      // Устанавливаем фиксированное время на 12:30
+      reminderDate.setHours(11, 29, 0, 0); // Часы, минуты, секунды, миллисекунды
+
+      // Допустим, часовой пояс пользователя передается в переменной userTimezoneOffset (например, +3 или -5)
+      const userTimezoneOffset = +3; // Пример: для Москвы установлено +3
+
+      const reminderTimeUTC =
+        reminderDate.getTime() - userTimezoneOffset * 60 * 60 * 1000;
+
+      // Сохраняем информацию о дате в сессии
+      session.laterDate = userMessage;
+      await session.save();
+
+      // Вычисляем время до напоминания
+      const currentTime = Date.now();
+      const reminderDelay = reminderTimeUTC - currentTime;
+
+      if (reminderDelay > 0) {
+        await ctx.reply(
+          `Вы выбрали ${userMessage}. Я свяжусь с вами за два дня до этой даты!`
+        );
+        setTimeout(async () => {
+          await ctx.reply(
+            `Напоминаю, что вы запланировали тренировку ориентировочно на ${userMessage}. Выберите точную дату занятия:`
+          );
+          // Получаем данные студии из сессии и telegram_id
+          const studio = session.studio; // Берем студию из сессии
+          const telegramId = ctx.from.id; // ID пользователя Telegram
+
+          // Отправляем данные на вебхук
+          await sendToWebhook(studio, telegramId);
+
+          // Сохраняем шаг, если нужно
+          session.step = "awaiting_next_step";
+          await session.save();
+        }, reminderDelay);
+      } else {
+        await ctx.reply(
+          "Указанная дата уже прошла. Пожалуйста, выберите другую."
+        );
+        session.step = "awaiting_later_date";
+        await session.save();
+      }
+
+      // Верните шаг к предыдущему состоянию или завершите сессию
+      session.step = "completed";
+      await session.save();
+    } else {
+      await ctx.reply(
+        "Неправильный формат даты. Пожалуйста, используйте формат дд.мм (пример: 04.12)."
+      );
+
+      session.step = "awaiting_later_date";
+      await session.save();
+    }
   } else if (session.step === "awaiting_name") {
     session.name = ctx.message.text;
     await ctx.reply(messages.enterPhone);
@@ -493,19 +740,7 @@ bot.on("message:text", async (ctx) => {
 
     session.step = "awaiting_confirmation";
     await session.save(); // Сохранение сессии после изменения шага
-  }
-  // else if (session.step === "awaiting_confirmation") {
-  //   if (ctx.message.text === "Все верно") {
-  //     await ctx.reply("Выберите тип карты для оплаты:", {
-  //       reply_markup: new InlineKeyboard()
-  //         .add({ text: "Российская (990₽)", callback_data: "rubles" })
-  //         .add({ text: "Зарубежная (10€)", callback_data: "euros" }),
-  //     });
-  //     session.step = "awaiting_payment_type";
-  //     await session.save(); // Сохранение сессии после изменения шага
-  //   }
-  // }
-  else if (session.step.startsWith("awaiting_edit_")) {
+  } else if (session.step.startsWith("awaiting_edit_")) {
     const field = session.step.replace("awaiting_edit_", "");
     if (field === "name") {
       session.name = ctx.message.text;

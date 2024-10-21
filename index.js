@@ -657,7 +657,7 @@ bot.on("message:text", async (ctx) => {
       if (date >= currentDate) {
         // Если дата в будущем, продолжаем сценарий
         const reminderDate = new Date(date);
-        reminderDate.setDate(reminderDate.getDate() - 3);
+        reminderDate.setDate(reminderDate.getDate() - 2);
         reminderDate.setHours(12, 30, 0, 0); // Устанавливаем фиксированное время
 
         const userTimezoneOffset = +3; // Пример: для Москвы установлено +3
