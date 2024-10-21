@@ -655,24 +655,23 @@ bot.on("message:text", async (ctx) => {
       reminderDate.setDate(reminderDate.getDate() - 2);
 
       // Устанавливаем фиксированное время на 12:30
-      reminderDate.setHours(11, 17, 0, 0); // Часы, минуты, секунды, миллисекунды
+      reminderDate.setHours(11, 29, 0, 0); // Часы, минуты, секунды, миллисекунды
 
       // Допустим, часовой пояс пользователя передается в переменной userTimezoneOffset (например, +3 или -5)
       const userTimezoneOffset = +3; // Пример: для Москвы установлено +3
 
-      reminderDate.setHours(
-        reminderDate.getHours() -
-          reminderDate.getTimezoneOffset() / 60 +
-          userTimezoneOffset
-      );
+      const reminderTimeUTC =
+        reminderDate.getTime() - userTimezoneOffset * 60 * 60 * 1000;
 
       // Сохраняем информацию о дате в сессии
       session.laterDate = userMessage;
       await session.save();
 
-      // Используйте setTimeout или node-cron для напоминания
-      const reminderTime = reminderDate.getTime() - Date.now();
-      if (reminderTime > 0) {
+      // Вычисляем время до напоминания
+      const currentTime = Date.now();
+      const reminderDelay = reminderTimeUTC - currentTime;
+
+      if (reminderDelay > 0) {
         await ctx.reply(
           `Вы выбрали ${userMessage}. Я свяжусь с вами за два дня до этой даты!`
         );
@@ -690,7 +689,7 @@ bot.on("message:text", async (ctx) => {
           // Сохраняем шаг, если нужно
           session.step = "awaiting_next_step";
           await session.save();
-        }, reminderTime);
+        }, reminderDelay);
       } else {
         await ctx.reply(
           "Выбрана дата уже прошла. Пожалуйста, выберите другую дату."
