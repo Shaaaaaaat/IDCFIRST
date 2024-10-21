@@ -650,62 +650,64 @@ bot.on("message:text", async (ctx) => {
       const year = new Date().getFullYear();
       const date = new Date(year, month - 1, day);
 
-      // Вычисляем дату напоминания (2 дня до выбранной даты)
-      const reminderDate = new Date(date);
-      reminderDate.setDate(reminderDate.getDate() - 2);
+      // Проверяем, что дата в будущем
+      const currentDate = new Date();
+      currentDate.setHours(0, 0, 0, 0); // Устанавливаем время текущей даты в полночь
 
-      // Устанавливаем фиксированное время на 12:30
-      reminderDate.setHours(11, 29, 0, 0); // Часы, минуты, секунды, миллисекунды
+      if (date >= currentDate) {
+        // Если дата в будущем, продолжаем сценарий
+        const reminderDate = new Date(date);
+        reminderDate.setDate(reminderDate.getDate() - 2);
+        reminderDate.setHours(12, 30, 0, 0); // Устанавливаем фиксированное время
 
-      // Допустим, часовой пояс пользователя передается в переменной userTimezoneOffset (например, +3 или -5)
-      const userTimezoneOffset = +3; // Пример: для Москвы установлено +3
+        const userTimezoneOffset = +3; // Пример: для Москвы установлено +3
+        const reminderTimeUTC =
+          reminderDate.getTime() - userTimezoneOffset * 60 * 60 * 1000;
 
-      const reminderTimeUTC =
-        reminderDate.getTime() - userTimezoneOffset * 60 * 60 * 1000;
+        session.laterDate = userMessage;
+        await session.save();
 
-      // Сохраняем информацию о дате в сессии
-      session.laterDate = userMessage;
-      await session.save();
+        const currentTime = Date.now();
+        const reminderDelay = reminderTimeUTC - currentTime;
 
-      // Вычисляем время до напоминания
-      const currentTime = Date.now();
-      const reminderDelay = reminderTimeUTC - currentTime;
-
-      if (reminderDelay > 0) {
         await ctx.reply(
           `Вы выбрали ${userMessage}. Я свяжусь с вами за два дня до этой даты!`
         );
-        setTimeout(async () => {
-          await ctx.reply(
-            `Напоминаю, что вы запланировали тренировку ориентировочно на ${userMessage}. Выберите точную дату занятия:`
-          );
-          // Получаем данные студии из сессии и telegram_id
-          const studio = session.studio; // Берем студию из сессии
-          const telegramId = ctx.from.id; // ID пользователя Telegram
 
-          // Отправляем данные на вебхук
-          await sendToWebhook(studio, telegramId);
+        if (reminderDelay > 0) {
+          setTimeout(async () => {
+            await ctx.reply(
+              `Напоминаю, что вы запланировали тренировку на ${userMessage}. Выберите точную дату занятия:`
+            );
 
-          // Сохраняем шаг, если нужно
-          session.step = "awaiting_next_step";
-          await session.save();
-        }, reminderDelay);
+            const studio = session.studio;
+            const telegramId = ctx.from.id;
+
+            // Отправляем данные на вебхук
+            await sendToWebhook(studio, telegramId);
+
+            session.step = "awaiting_next_step";
+            await session.save();
+          }, reminderDelay);
+        }
+
+        session.step = "completed";
+        await session.save();
       } else {
+        // Если дата прошедшая, повторяем запрос
         await ctx.reply(
-          "Указанная дата уже прошла. Пожалуйста, выберите другую."
+          "Указанная дата уже прошла. Пожалуйста, выберите дату в будущем."
         );
+        // Оставляем состояние "awaiting_later_date"
         session.step = "awaiting_later_date";
         await session.save();
       }
-
-      // Верните шаг к предыдущему состоянию или завершите сессию
-      session.step = "completed";
-      await session.save();
     } else {
+      // Если формат неверный, повторяем запрос
       await ctx.reply(
-        "Неправильный формат даты. Пожалуйста, используйте формат дд.мм (пример: 04.12)."
+        "Неправильный формат даты. Пожалуйста, используйте формат дд.мм (например, 04.12)."
       );
-
+      // Оставляем состояние "awaiting_later_date"
       session.step = "awaiting_later_date";
       await session.save();
     }
