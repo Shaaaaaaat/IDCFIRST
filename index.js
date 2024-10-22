@@ -605,6 +605,12 @@ bot.on("callback_query:data", async (ctx) => {
     // Сохраняем статус ожидания даты
     session.step = "awaiting_later_date";
     await session.save();
+  } else if (action.startsWith("a_net")) {
+    await ctx.reply(`Ну жаль`);
+
+    // Сохраняем статус ожидания даты
+    session.step = "awaiting_later_date";
+    await session.save();
   }
 });
 
