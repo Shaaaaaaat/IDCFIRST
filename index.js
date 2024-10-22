@@ -191,6 +191,32 @@ async function sendToWebhook(studio, telegramId) {
   }
 }
 
+// Функция для проверки наличия пользователя в Airtable
+async function checkUserInAirtable(tgId) {
+  const apiKey = process.env.AIRTABLE_API_KEY;
+  const baseId = process.env.AIRTABLE_BASE_ID;
+  const clientsId = process.env.AIRTABLE_CLIENTS_ID;
+
+  const url = `https://api.airtable.com/v0/${baseId}/${clientsId}?filterByFormula={tgId}='${tgId}'`;
+  const headers = {
+    Authorization: `Bearer ${apiKey}`,
+  };
+
+  try {
+    const response = await axios.get(url, { headers });
+    console.log(
+      `Результат проверки пользователя: ${response.data.records.length > 0}`
+    );
+    return response.data.records.length > 0; // Если записи найдены, возвращаем true
+  } catch (error) {
+    console.error(
+      "Error checking user in Airtable:",
+      error.response ? error.response.data : error.message
+    );
+    return false; // В случае ошибки также возвращаем false
+  }
+}
+
 // Функция для отправки данных в Airtable
 async function sendFirstAirtable(tgId, name, nickname) {
   const apiKey = process.env.AIRTABLE_API_KEY;
@@ -336,29 +362,36 @@ bot.command("start", async (ctx) => {
       ctx.from.last_name || ""
     }`.trim();
 
-    // Сохраняем идентификатор записи в сессии
-    const airtableId = await sendFirstAirtable(
-      ctx.from.id,
-      fullName,
-      ctx.from.username
-    );
-    const session = await Session.findOne({ userId: ctx.from.id.toString() });
-    session.airtableId = airtableId; // Сохраняем airtableId в сессии
-    await session.save();
+    const tgId = ctx.from.id; // Сохранение tgId пользователя
+    // Проверка наличия пользователя в Airtable
+    const userExists = await checkUserInAirtable(tgId);
 
-    // await sendFirstAirtable(ctx.from.id, fullName, ctx.from.username);
+    if (userExists) {
+      // Если пользователь уже есть в базе, выполняем сценарий для существующих пользователей
+      await handleExistingUserScenario(ctx);
+    } else {
+      // Сохраняем идентификатор записи в сессии
+      const airtableId = await sendFirstAirtable(
+        ctx.from.id,
+        fullName,
+        ctx.from.username
+      );
+      const session = await Session.findOne({ userId: ctx.from.id.toString() });
+      session.airtableId = airtableId; // Сохраняем airtableId в сессии
+      await session.save();
 
-    await ctx.reply(
-      "Привет! Подскажите, пожалуйста, какой город вас интересует?",
-      {
-        reply_markup: new InlineKeyboard()
-          .add({ text: "Москва", callback_data: "city_moscow" })
-          .row()
-          .add({ text: "Санкт-Петербург", callback_data: "city_spb" })
-          .row()
-          .add({ text: "Ереван", callback_data: "city_yerevan" }),
-      }
-    );
+      await ctx.reply(
+        "Привет! Подскажите, пожалуйста, какой город вас интересует?",
+        {
+          reply_markup: new InlineKeyboard()
+            .add({ text: "Москва", callback_data: "city_moscow" })
+            .row()
+            .add({ text: "Санкт-Петербург", callback_data: "city_spb" })
+            .row()
+            .add({ text: "Ереван", callback_data: "city_yerevan" }),
+        }
+      );
+    }
   } catch (error) {
     console.error("Произошла ошибка:", error);
   }
@@ -499,8 +532,8 @@ bot.on("callback_query:data", async (ctx) => {
         session.email, // Email пользователя
         session.phone, // Телефон пользователя
         ctx.from.id, // Telegram ID пользователя
-        session.city, // Телефон пользователя
-        session.studio // Телефон пользователя
+        session.city, // Город пользователя
+        session.studio // Студия пользователя
       );
 
       session.step = "awaiting_training_type";
@@ -562,6 +595,12 @@ bot.on("callback_query:data", async (ctx) => {
     await ctx.reply(
       `Пожалуйста, укажите ориентировочную дату тренировки в формате дд.мм.\nЗа два дня до этой даты я вышлю актуальное расписание для выбора дня.`
     );
+
+    // Сохраняем статус ожидания даты
+    session.step = "awaiting_later_date";
+    await session.save();
+  } else if (action.startsWith("a_da")) {
+    await ctx.reply(`Супер`);
 
     // Сохраняем статус ожидания даты
     session.step = "awaiting_later_date";
@@ -780,6 +819,21 @@ bot.command("operator", async (ctx) => {
     console.error("Произошла ошибка:", error);
   }
 });
+
+// Функция для обработки сценария, если пользователь уже есть в базе
+async function handleExistingUserScenario(ctx) {
+  try {
+    // Например, можно отправить приветственное сообщение с предложением сразу выбрать студию
+    await ctx.reply("Вы уже являетесь нашим учеником :)");
+
+    // // Здесь можно также задать какой-либо шаг сессии, если необходимо
+    // const session = await Session.findOne({ userId: ctx.from.id.toString() });
+    // session.step = "awaiting_existing_user_action";
+    // await session.save();
+  } catch (error) {
+    console.error("Ошибка при обработке существующего пользователя:", error);
+  }
+}
 
 // Запуск бота
 bot.start();
