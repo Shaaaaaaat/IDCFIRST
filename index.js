@@ -896,6 +896,7 @@ bot.on("callback_query:data", async (ctx) => {
     await session.save();
   } else if (action.startsWith("a_da")) {
     try {
+      const tgId = ctx.from.id;
       const userInfo = await getUserInfo(tgId);
       if (userInfo) {
         // const { tag } = userInfo;
