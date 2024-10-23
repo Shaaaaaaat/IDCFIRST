@@ -109,6 +109,231 @@ async function createStripePaymentLink(priceId, paymentId) {
   return paymentLink.url;
 }
 
+const actionData = {
+  buy_13200_msc_ycg: { sum: 13200, lessons: 12, tag: "MSC_group_YCG" },
+  buy_1400_msc_ycg: { sum: 1400, lessons: 1, tag: "MSC_group_YCG" },
+  buy_3600_personal_mscycg: { sum: 3600, lessons: 1, tag: "MSC_personal_YCG" },
+  buy_32400_personal_mscycg: {
+    sum: 32400,
+    lessons: 10,
+    tag: "MSC_personal_YCG",
+  },
+  buy_5000_personal_mscycg: { sum: 5000, lessons: 1, tag: "MSC_personal_YCG" },
+  buy_6000_personal_mscycg: { sum: 6000, lessons: 1, tag: "MSC_personal_YCG" },
+  buy_11400_spb_spi: { sum: 11400, lessons: 12, tag: "SPB_group_SPI" },
+  buy_9600_spb_spi: { sum: 9600, lessons: 12, tag: "SPB_group_SPI" },
+  buy_1100_spb_spi: { sum: 1100, lessons: 1, tag: "SPB_group_SPI" },
+  buy_3600_personal_spbspi: { sum: 3600, lessons: 1, tag: "SPB_personal_SPI" },
+  buy_32400_personal_spbspi: {
+    sum: 32400,
+    lessons: 10,
+    tag: "SPB_personal_SPI",
+  },
+  buy_5000_personal_spbspi: { sum: 5000, lessons: 1, tag: "SPB_personal_SPI" },
+  buy_6000_personal_spbspi: { sum: 6000, lessons: 1, tag: "SPB_personal_SPI" },
+  buy_11400_spb_rtc: { sum: 11400, lessons: 12, tag: "SPB_group_RTC" },
+  buy_9600_spb_rtc: { sum: 9600, lessons: 12, tag: "SPB_group_RTC" },
+  buy_1100_spb_rtc: { sum: 1100, lessons: 1, tag: "SPB_group_RTC" },
+  buy_3600_personal_spbrtc: { sum: 3600, lessons: 1, tag: "SPB_personal_RTC" },
+  buy_32400_personal_spbrtc: {
+    sum: 32400,
+    lessons: 10,
+    tag: "SPB_personal_RTC",
+  },
+  buy_5000_personal_spbrtc: { sum: 5000, lessons: 1, tag: "SPB_personal_RTC" },
+  buy_6000_personal_spbrtc: { sum: 6000, lessons: 1, tag: "SPB_personal_RTC" },
+  buy_11400_spb_hkc: { sum: 11400, lessons: 12, tag: "SPB_group_HKC" },
+  buy_9600_spb_hkc: { sum: 9600, lessons: 12, tag: "SPB_group_HKC" },
+  buy_1100_spb_hkc: { sum: 1100, lessons: 1, tag: "SPB_group_HKC" },
+  buy_3600_personal_spbhkc: { sum: 3600, lessons: 1, tag: "SPB_personal_HKC" },
+  buy_32400_personal_spbhkc: {
+    sum: 32400,
+    lessons: 10,
+    tag: "SPB_personal_HKC",
+  },
+  buy_5000_personal_spbhkc: { sum: 5000, lessons: 1, tag: "SPB_personal_HKC" },
+  buy_6000_personal_spbhkc: { sum: 6000, lessons: 1, tag: "SPB_personal_HKC" },
+  buy_1100_dsdasha_rub: { sum: 1100, lessons: 1, tag: "ds_dasha_rub" },
+  buy_9600_dsdasha_rub: { sum: 9600, lessons: 12, tag: "ds_dasha_rub" },
+  buy_23400_dsdasha_rub: { sum: 23400, lessons: 36, tag: "ds_dasha_rub" },
+  buy_105_dsdasha_eur: { sum: 1, lessons: 1, tag: "ds_dasha_eur" },
+  buy_249_dsdasha_eur: { sum: 249, lessons: 36, tag: "ds_dasha_eur" },
+};
+
+// Объект с данными для различных типов кнопок
+const buttonsData = {
+  group: {
+    MSCYCG: [
+      {
+        text: "12 занятий (13 200₽) — действует 6 недель",
+        callback_data: "buy_13200_msc_ycg",
+      },
+      {
+        text: "1 занятие (1 400₽) — действует 4 недели",
+        callback_data: "buy_1400_msc_ycg",
+      },
+      {
+        text: "Пополнить депозит (любая сумма)",
+        callback_data: "deposit",
+      },
+    ],
+    SPBSPI: [
+      {
+        text: "12 занятий (11 400₽) — действует 6 недель",
+        callback_data: "buy_11400_spb_spi",
+      },
+      {
+        text: "12 занятий (9 600₽) — действует 4 недели",
+        callback_data: "buy_9600_spb_spi",
+      },
+      {
+        text: "1 занятие (1 100₽) — действует 4 недели",
+        callback_data: "buy_1100_spb_spi",
+      },
+      {
+        text: "Пополнить депозит (любая сумма)",
+        callback_data: "deposit",
+      },
+    ],
+    SPBRTC: [
+      {
+        text: "12 занятий (11 400₽) — действует 6 недель",
+        callback_data: "buy_11400_spb_rtc",
+      },
+      {
+        text: "12 занятий (9 600₽) — действует 4 недели",
+        callback_data: "buy_9600_spb_rtc",
+      },
+      {
+        text: "1 занятие (1 100₽) — действует 4 недели",
+        callback_data: "buy_1100_spb_rtc",
+      },
+      {
+        text: "Пополнить депозит (любая сумма)",
+        callback_data: "deposit",
+      },
+    ],
+    SPBHKC: [
+      {
+        text: "12 занятий (11 400₽) — действует 6 недель",
+        callback_data: "buy_11400_spb_hkc",
+      },
+      {
+        text: "12 занятий (9 600₽) — действует 4 недели",
+        callback_data: "buy_9600_spb_hkc",
+      },
+      {
+        text: "1 занятие (1 100₽) — действует 4 недели",
+        callback_data: "buy_1100_spb_hkc",
+      },
+      {
+        text: "Пополнить депозит (любая сумма)",
+        callback_data: "deposit",
+      },
+    ],
+  },
+  personal: {
+    MSCYCG: [
+      {
+        text: "10 занятий (32 400₽) — действует 6 недель",
+        callback_data: "buy_32400_personal_mscycg",
+      },
+      {
+        text: "1 занятие (3 600₽) — действует 4 недели",
+        callback_data: "buy_3600_personal_mscycg",
+      },
+      {
+        text: "Сплит на двоих (5 000₽) — действует 4 недели",
+        callback_data: "buy_5000_personal_mscycg",
+      },
+      {
+        text: "Сплит на троих (6 000₽) — действует 4 недели",
+        callback_data: "buy_6000_personal_mscycg",
+      },
+    ],
+    SPBSPI: [
+      {
+        text: "10 занятий (32 400₽) — действует 6 недель",
+        callback_data: "buy_32400_personal_spbspi",
+      },
+      {
+        text: "1 занятие (3 600₽) — действует 4 недели",
+        callback_data: "buy_3600_personal_spbspi",
+      },
+      {
+        text: "Сплит на двоих (5 000₽) — действует 4 недели",
+        callback_data: "buy_5000_personal_spbspi",
+      },
+      {
+        text: "Сплит на троих (6 000₽) — действует 4 недели",
+        callback_data: "buy_6000_personal_spbspi",
+      },
+    ],
+    SPBRTC: [
+      {
+        text: "10 занятий (32 400₽) — действует 6 недель",
+        callback_data: "buy_32400_personal_spbrtc",
+      },
+      {
+        text: "1 занятие (3 600₽) — действует 4 недели",
+        callback_data: "buy_3600_personal_spbrtc",
+      },
+      {
+        text: "Сплит на двоих (5 000₽) — действует 4 недели",
+        callback_data: "buy_5000_personal_spbrtc",
+      },
+      {
+        text: "Сплит на троих (6 000₽) — действует 4 недели",
+        callback_data: "buy_6000_personal_spbrtc",
+      },
+    ],
+    SPBHKC: [
+      {
+        text: "10 занятий (32 400₽) — действует 6 недель",
+        callback_data: "buy_32400_personal_spbhkc",
+      },
+      {
+        text: "1 занятие (3 600₽) — действует 4 недели",
+        callback_data: "buy_3600_personal_spbhkc",
+      },
+      {
+        text: "Сплит на двоих (5 000₽) — действует 4 недели",
+        callback_data: "buy_5000_personal_spbhkc",
+      },
+      {
+        text: "Сплит на троих (6 000₽) — действует 4 недели",
+        callback_data: "buy_6000_personal_spbhkc",
+      },
+    ],
+  },
+  ds: {
+    RUBDASHA: [
+      {
+        text: "1 занятие (1 100₽) — действует 4 недели",
+        callback_data: "buy_1100_dsdasha_rub",
+      },
+      {
+        text: "12 занятий (9 600₽) — действует 6 недель",
+        callback_data: "buy_9600_dsdasha_rub",
+      },
+      {
+        text: "36 занятий (23 400₽) — действует 14 недель",
+        callback_data: "buy_23400_dsdasha_rub",
+      },
+    ],
+    EURDASHA: [
+      {
+        text: "12 занятий (105€) — действует 6 недель",
+        callback_data: "buy_105_dsdasha_eur",
+      },
+      {
+        text: "36 занятий (249€) — действует 14 недель",
+        callback_data: "buy_249_dsdasha_eur",
+      },
+    ],
+  },
+};
+
 const studioDetails = {
   "м. 1905г.": {
     price: 1,
@@ -160,6 +385,76 @@ function getPriceAndSchedule(studio) {
   return (
     priceSchedule[studio] || "Цена и расписание зависят от выбранной программы."
   );
+}
+
+// Функция для получения информации о пользователе из Airtable
+async function getUserInfo(tgId) {
+  const apiKey = process.env.AIRTABLE_API_KEY;
+  const baseId = process.env.AIRTABLE_BASE_ID;
+  const clientsId = process.env.AIRTABLE_CLIENTS_ID;
+
+  const url = `https://api.airtable.com/v0/${baseId}/${clientsId}?filterByFormula={tgId}='${tgId}'`;
+  const headers = {
+    Authorization: `Bearer ${apiKey}`,
+  };
+
+  try {
+    const response = await axios.get(url, { headers });
+    const records = response.data.records;
+
+    if (records.length > 0) {
+      const email = records[0].fields.email || "нет email"; // Если email отсутствует, выводим сообщение
+      const tag = records[0].fields.Tag || "неизвестен"; // Если тег отсутствует, выводим "неизвестен"
+      const balance =
+        records[0].fields.Balance !== undefined
+          ? records[0].fields.Balance
+          : "0";
+      const currency = records[0].fields.Currency || "неизвестна"; // Если валюты нет, выводим "неизвестна"
+      return { email, tag, balance, currency };
+    } else {
+      return null; // Если запись не найдена, возвращаем null
+    }
+  } catch (error) {
+    console.error(
+      "Error fetching user info from Airtable:",
+      error.response ? error.response.data : error.message
+    );
+    return null; // В случае ошибки возвращаем null
+  }
+}
+
+// Функция для генерации клавиатуры на основе тега пользователя
+function generateKeyboard(tag) {
+  let keyboard = new InlineKeyboard();
+  console.log("Отправляю кнопки для оплаты");
+
+  if (tag === "ds_dasha_rub") {
+    buttonsData.ds.RUBDASHA.forEach((button) => keyboard.add(button).row());
+  } else if (tag === "ds_dasha_eur") {
+    buttonsData.ds.EURDASHA.forEach((button) => keyboard.add(button).row());
+  } else if (tag === "MSC_group_YCG") {
+    buttonsData.group.MSCYCG.forEach((button) => keyboard.add(button).row());
+  } else if (tag === "SPB_group_SPI") {
+    buttonsData.group.SPBSPI.forEach((button) => keyboard.add(button).row());
+  } else if (tag === "SPB_group_RTC") {
+    buttonsData.group.SPBRTC.forEach((button) => keyboard.add(button).row());
+  } else if (tag === "SPB_group_HKC") {
+    buttonsData.group.SPBHKC.forEach((button) => keyboard.add(button).row());
+  } else if (tag === "MSC_personal_YCG") {
+    buttonsData.personal.MSCYCG.forEach((button) => keyboard.add(button).row());
+  } else if (tag === "SPB_personal_SPI") {
+    buttonsData.personal.SPBSPI.forEach((button) => keyboard.add(button).row());
+  } else if (tag === "SPB_personal_RTC") {
+    buttonsData.personal.SPBRTC.forEach((button) => keyboard.add(button).row());
+  } else if (tag === "SPB_personal_HKC") {
+    buttonsData.personal.SPBHKC.forEach((button) => keyboard.add(button).row());
+  } else if (tag === "ds") {
+    buttonsData.ds.forEach((button) => keyboard.add(button).row());
+  } else {
+    // Если тег не распознан, возвращаем null
+    return null;
+  }
+  return keyboard;
 }
 
 // Функция для отправки данных на вебхук
@@ -600,11 +895,25 @@ bot.on("callback_query:data", async (ctx) => {
     session.step = "awaiting_later_date";
     await session.save();
   } else if (action.startsWith("a_da")) {
-    await ctx.reply(`Супер`);
-
-    // Сохраняем статус ожидания даты
-    session.step = "awaiting_later_date";
-    await session.save();
+    try {
+      const userInfo = await getUserInfo(tgId);
+      if (userInfo) {
+        // const { tag } = userInfo;
+        const newString = userInfo.tag;
+        const keyboard = generateKeyboard(newString);
+        if (keyboard) {
+          await ctx.reply("Выберите тариф:", {
+            reply_markup: keyboard,
+          });
+        } else {
+          await ctx.reply(
+            "Ваш тег не распознан. Пожалуйста, обратитесь к поддержке."
+          );
+        }
+      }
+    } catch (error) {
+      console.error("Произошла ошибка:", error);
+    }
   } else if (action.startsWith("a_net")) {
     await ctx.reply(`Ну жаль`);
 
