@@ -956,32 +956,6 @@ bot.on("callback_query:data", async (ctx) => {
       session.email
     );
 
-    // const userInfo = await getUserInfo(tgId);
-    // const { tag, currency } = userInfo;
-    // const selectedPlan = actionData[tag]; // Получаем выбранный план по тегу
-    // const paymentId = generateUniqueId(); // Генерация уникального ID для платежа
-    // let paymentLink;
-
-    if (currency === "RUB") {
-      // Если валюта RUB, генерируем ссылку через Робокассу
-      paymentLink = generatePaymentLink(
-        paymentId,
-        selectedPlan.sum,
-        userInfo.email
-      );
-    } else if (currency === "AMD") {
-      // Если валюта AMD, генерируем ссылку через Stripe
-      const priceId = await createStripePrice(
-        selectedPlan.sum,
-        currency,
-        selectedPlan.tag
-      );
-      paymentLink = await createStripePaymentLink(priceId, paymentId);
-    } else {
-      await ctx.reply("Валюта не поддерживается.");
-      return;
-    }
-
     // Отправляем пользователю ссылку на оплату
     await ctx.reply(`Перейдите по ссылке для оплаты: ${paymentLink}`);
 
