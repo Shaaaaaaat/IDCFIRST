@@ -895,17 +895,13 @@ bot.on("callback_query:data", async (ctx) => {
     session.step = "awaiting_later_date";
     await session.save();
   } else if (action.startsWith("a_da")) {
-    // await ctx.reply(
-    //   `Супер, рад слышать! Чтобы записаться на следующую тренировку, пожалуйста, выберите и оплатите подходящий тариф из списка ниже:`
-    // );
-
     try {
       const tgId = ctx.from.id;
       const userInfo = await getUserInfo(tgId);
+      const session = await Session.findOne({ userId: tgId.toString() });
       if (userInfo) {
         const { tag, currency } = userInfo;
-        const newString = userInfo.tag;
-        const keyboard = generateKeyboard(newString);
+        const keyboard = generateKeyboard(tag);
         if (keyboard) {
           await ctx.reply(
             "Супер, рад слышать! Чтобы записаться на следующую тренировку, пожалуйста, выберите и оплатите подходящий тариф из списка ниже:",
@@ -918,54 +914,56 @@ bot.on("callback_query:data", async (ctx) => {
             "Ваш тег не распознан. Пожалуйста, обратитесь к поддержке."
           );
         }
-
-        // Генерация ссылки для оплаты
-        const selectedPlan = actionData[tag]; // Получаем выбранный план по тегу
-        const paymentId = generateUniqueId(); // Генерация уникального ID для платежа
-        let paymentLink;
-
-        if (action.includes("buy")) {
-          if (currency === "RUB") {
-            // Если валюта RUB, генерируем ссылку через Робокассу
-            paymentLink = generatePaymentLink(
-              paymentId,
-              selectedPlan.sum,
-              userInfo.email
-            );
-          } else if (currency === "AMD") {
-            // Если валюта AMD, генерируем ссылку через Stripe
-            const priceId = await createStripePrice(
-              selectedPlan.sum,
-              currency,
-              selectedPlan.tag
-            );
-            paymentLink = await createStripePaymentLink(priceId, paymentId);
-          } else {
-            await ctx.reply("Валюта не поддерживается.");
-            return;
-          }
-
-          // Отправляем пользователю ссылку на оплату
-          await ctx.reply(`Перейдите по ссылке для оплаты: ${paymentLink}`);
-
-          // Сохраняем данные в Airtable
-          const lessons = selectedPlan.lessons;
-
-          const date = new Date().toLocaleDateString(); // Текущая дата
-          await sendTwoToAirtable(
-            tgId,
-            paymentId,
-            selectedPlan.sum,
-            lessons,
-            tag,
-            date,
-            ctx.from.username
-          );
-        }
+        // Сохраняем информацию о выборе тарифа в сессии
+        session.selectedTag = tag;
+        session.currency = currency;
+        await session.save(); // Сохраняем обновленную сессию
       }
     } catch (error) {
       console.error("Произошла ошибка:", error);
     }
+  } else if (action.startsWith("buy")) {
+    // Генерация ссылки для оплаты
+    const selectedPlan = actionData[tag]; // Получаем выбранный план по тегу
+    const paymentId = generateUniqueId(); // Генерация уникального ID для платежа
+    let paymentLink;
+
+    if (currency === "RUB") {
+      // Если валюта RUB, генерируем ссылку через Робокассу
+      paymentLink = generatePaymentLink(
+        paymentId,
+        selectedPlan.sum,
+        userInfo.email
+      );
+    } else if (currency === "AMD") {
+      // Если валюта AMD, генерируем ссылку через Stripe
+      const priceId = await createStripePrice(
+        selectedPlan.sum,
+        currency,
+        selectedPlan.tag
+      );
+      paymentLink = await createStripePaymentLink(priceId, paymentId);
+    } else {
+      await ctx.reply("Валюта не поддерживается.");
+      return;
+    }
+
+    // Отправляем пользователю ссылку на оплату
+    await ctx.reply(`Перейдите по ссылке для оплаты: ${paymentLink}`);
+
+    // Сохраняем данные в Airtable
+    const lessons = selectedPlan.lessons;
+
+    const date = new Date().toLocaleDateString(); // Текущая дата
+    await sendTwoToAirtable(
+      tgId,
+      paymentId,
+      selectedPlan.sum,
+      lessons,
+      tag,
+      date,
+      ctx.from.username
+    );
   } else if (action.startsWith("a_net")) {
     await ctx.reply(`Ну жаль`);
 
