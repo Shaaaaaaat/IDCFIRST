@@ -895,9 +895,9 @@ bot.on("callback_query:data", async (ctx) => {
     session.step = "awaiting_later_date";
     await session.save();
   } else if (action.startsWith("a_da")) {
-    await ctx.reply(
-      `Отлично! Чтобы записаться на следующую тренировку, выберите и оплатите подходящий тариф из списка ниже:`
-    );
+    // await ctx.reply(
+    //   `Супер, рад слышать! Чтобы записаться на следующую тренировку, пожалуйста, выберите и оплатите подходящий тариф из списка ниже:`
+    // );
 
     try {
       const tgId = ctx.from.id;
@@ -907,9 +907,12 @@ bot.on("callback_query:data", async (ctx) => {
         const newString = userInfo.tag;
         const keyboard = generateKeyboard(newString);
         if (keyboard) {
-          await ctx.reply("Выберите тариф:", {
-            reply_markup: keyboard,
-          });
+          await ctx.reply(
+            "Супер, рад слышать! Чтобы записаться на следующую тренировку, пожалуйста, выберите и оплатите подходящий тариф из списка ниже:",
+            {
+              reply_markup: keyboard,
+            }
+          );
         } else {
           await ctx.reply(
             "Ваш тег не распознан. Пожалуйста, обратитесь к поддержке."
@@ -918,54 +921,47 @@ bot.on("callback_query:data", async (ctx) => {
 
         // Генерация ссылки для оплаты
         const selectedPlan = actionData[tag]; // Получаем выбранный план по тегу
-        if (!selectedPlan) {
-          await ctx.reply("Не удалось найти выбранный план.");
-          return;
-        }
-
         const paymentId = generateUniqueId(); // Генерация уникального ID для платежа
         let paymentLink;
 
-        if (currency === "RUB") {
-          // Если валюта RUB, генерируем ссылку через Робокассу
-          paymentLink = generatePaymentLink(
+        if (selectedPlan) {
+          if (currency === "RUB") {
+            // Если валюта RUB, генерируем ссылку через Робокассу
+            paymentLink = generatePaymentLink(
+              paymentId,
+              selectedPlan.sum,
+              userInfo.email
+            );
+          } else if (currency === "AMD") {
+            // Если валюта AMD, генерируем ссылку через Stripe
+            const priceId = await createStripePrice(
+              selectedPlan.sum,
+              currency,
+              selectedPlan.tag
+            );
+            paymentLink = await createStripePaymentLink(priceId, paymentId);
+          } else {
+            await ctx.reply("Валюта не поддерживается.");
+            return;
+          }
+
+          // Отправляем пользователю ссылку на оплату
+          await ctx.reply(`Перейдите по ссылке для оплаты: ${paymentLink}`);
+
+          // Сохраняем данные в Airtable
+          const lessons = selectedPlan.lessons;
+
+          const date = new Date().toLocaleDateString(); // Текущая дата
+          await sendTwoToAirtable(
+            tgId,
             paymentId,
             selectedPlan.sum,
-            userInfo.email
+            lessons,
+            tag,
+            date,
+            ctx.from.username
           );
-        } else if (currency === "AMD") {
-          // Если валюта AMD, генерируем ссылку через Stripe
-          const priceId = await createStripePrice(
-            selectedPlan.sum,
-            currency,
-            selectedPlan.tag
-          );
-          paymentLink = await createStripePaymentLink(priceId, paymentId);
-        } else {
-          await ctx.reply("Валюта не поддерживается.");
-          return;
         }
-
-        // Отправляем пользователю ссылку на оплату
-        await ctx.reply(`Перейдите по ссылке для оплаты: ${paymentLink}`);
-
-        // Сохраняем данные в Airtable
-        const lessons = selectedPlan.lessons;
-
-        const date = new Date().toLocaleDateString(); // Текущая дата
-        await sendTwoToAirtable(
-          tgId,
-          paymentId,
-          selectedPlan.sum,
-          lessons,
-          tag,
-          date,
-          ctx.from.username
-        );
-      } else {
-        await ctx.reply(
-          "Пользователь не найден. Пожалуйста, попробуйте снова."
-        );
       }
     } catch (error) {
       console.error("Произошла ошибка:", error);
