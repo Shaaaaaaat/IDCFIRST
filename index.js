@@ -924,6 +924,8 @@ bot.on("callback_query:data", async (ctx) => {
     }
   } else if (action.startsWith("buy")) {
     // Генерация ссылки для оплаты
+    const userInfo = await getUserInfo(tgId);
+    const { tag, currency } = userInfo;
     const selectedPlan = actionData[tag]; // Получаем выбранный план по тегу
     const paymentId = generateUniqueId(); // Генерация уникального ID для платежа
     let paymentLink;
