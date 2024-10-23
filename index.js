@@ -988,7 +988,7 @@ bot.on("callback_query:data", async (ctx) => {
     }
   } else if (action.startsWith("buy")) {
     // Генерация ссылки для оплаты
-
+    const actionInfo = actionData[buy];
     const { paymentLink, paymentId } = await generateSecondPaymentLinkForStudio(
       action,
       session.email
@@ -1000,9 +1000,9 @@ bot.on("callback_query:data", async (ctx) => {
     await thirdTwoToAirtable(
       ctx.from.id,
       paymentId,
-      action.sum,
-      action.lessons,
-      action.tag
+      actionInfo.sum,
+      actionInfo.lessons,
+      actionInfo.tag
     );
   } else if (action.startsWith("a_net")) {
     await ctx.reply(`Ну жаль`);
