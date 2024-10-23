@@ -156,8 +156,10 @@ const actionData = {
   buy_1100_dsdasha_rub: { sum: 1100, lessons: 1, tag: "ds_dasha_rub" },
   buy_9600_dsdasha_rub: { sum: 9600, lessons: 12, tag: "ds_dasha_rub" },
   buy_23400_dsdasha_rub: { sum: 23400, lessons: 36, tag: "ds_dasha_rub" },
-  buy_105_dsdasha_eur: { sum: 1, lessons: 1, tag: "ds_dasha_eur" },
+  buy_105_dsdasha_eur: { sum: 105, lessons: 12, tag: "ds_dasha_eur" },
   buy_249_dsdasha_eur: { sum: 249, lessons: 36, tag: "ds_dasha_eur" },
+  buy_60000_yvn_amd: { sum: 1, lessons: 12, tag: "YVN_group_GFG" },
+  buy_7000_yvn_amd: { sum: 249, lessons: 1, tag: "YVN_group_GFG" },
 };
 
 // Объект с данными для различных типов кнопок
@@ -171,10 +173,6 @@ const buttonsData = {
       {
         text: "1 занятие (1 400₽) — действует 4 недели",
         callback_data: "buy_1400_msc_ycg",
-      },
-      {
-        text: "Пополнить депозит (любая сумма)",
-        callback_data: "deposit",
       },
     ],
     SPBSPI: [
@@ -190,10 +188,6 @@ const buttonsData = {
         text: "1 занятие (1 100₽) — действует 4 недели",
         callback_data: "buy_1100_spb_spi",
       },
-      {
-        text: "Пополнить депозит (любая сумма)",
-        callback_data: "deposit",
-      },
     ],
     SPBRTC: [
       {
@@ -208,10 +202,6 @@ const buttonsData = {
         text: "1 занятие (1 100₽) — действует 4 недели",
         callback_data: "buy_1100_spb_rtc",
       },
-      {
-        text: "Пополнить депозит (любая сумма)",
-        callback_data: "deposit",
-      },
     ],
     SPBHKC: [
       {
@@ -225,10 +215,6 @@ const buttonsData = {
       {
         text: "1 занятие (1 100₽) — действует 4 недели",
         callback_data: "buy_1100_spb_hkc",
-      },
-      {
-        text: "Пополнить депозит (любая сумма)",
-        callback_data: "deposit",
       },
     ],
   },
@@ -306,6 +292,18 @@ const buttonsData = {
       },
     ],
   },
+  amd: {
+    YVNGFG: [
+      {
+        text: "12 занятий (60 000AMD) — действует 6 недель",
+        callback_data: "buy_60000_yvn_amd",
+      },
+      {
+        text: "1 занятие (7 000AMD) — действует 4 недели",
+        callback_data: "buy_7000_yvn_amd",
+      },
+    ],
+  },
   ds: {
     RUBDASHA: [
       {
@@ -362,7 +360,7 @@ const studioDetails = {
   "ул. Бузанда": {
     price: 100,
     currency: "AMD",
-    tag: "01YRV_group_GFT_start",
+    tag: "01YVN_group_GFG_start",
     paymentSystem: "stripe", // Использовать Stripe для Еревана
   },
 };
@@ -450,6 +448,8 @@ function generateKeyboard(tag) {
     buttonsData.personal.SPBHKC.forEach((button) => keyboard.add(button).row());
   } else if (tag === "ds") {
     buttonsData.ds.forEach((button) => keyboard.add(button).row());
+  } else if (tag === "YVN_group_GFG") {
+    buttonsData.amd.YVNGFG.forEach((button) => keyboard.add(button).row());
   } else {
     // Если тег не распознан, возвращаем null
     return null;
@@ -895,11 +895,15 @@ bot.on("callback_query:data", async (ctx) => {
     session.step = "awaiting_later_date";
     await session.save();
   } else if (action.startsWith("a_da")) {
+    await ctx.reply(
+      `Отлично! Чтобы записаться на следующую тренировку, выберите и оплатите подходящий тариф из списка ниже:`
+    );
+
     try {
       const tgId = ctx.from.id;
       const userInfo = await getUserInfo(tgId);
       if (userInfo) {
-        // const { tag } = userInfo;
+        const { tag, currency } = userInfo;
         const newString = userInfo.tag;
         const keyboard = generateKeyboard(newString);
         if (keyboard) {
@@ -911,6 +915,57 @@ bot.on("callback_query:data", async (ctx) => {
             "Ваш тег не распознан. Пожалуйста, обратитесь к поддержке."
           );
         }
+
+        // Генерация ссылки для оплаты
+        const selectedPlan = actionData[tag]; // Получаем выбранный план по тегу
+        if (!selectedPlan) {
+          await ctx.reply("Не удалось найти выбранный план.");
+          return;
+        }
+
+        const paymentId = generateUniqueId(); // Генерация уникального ID для платежа
+        let paymentLink;
+
+        if (currency === "RUB") {
+          // Если валюта RUB, генерируем ссылку через Робокассу
+          paymentLink = generatePaymentLink(
+            paymentId,
+            selectedPlan.sum,
+            userInfo.email
+          );
+        } else if (currency === "AMD") {
+          // Если валюта AMD, генерируем ссылку через Stripe
+          const priceId = await createStripePrice(
+            selectedPlan.sum,
+            currency,
+            selectedPlan.tag
+          );
+          paymentLink = await createStripePaymentLink(priceId, paymentId);
+        } else {
+          await ctx.reply("Валюта не поддерживается.");
+          return;
+        }
+
+        // Отправляем пользователю ссылку на оплату
+        await ctx.reply(`Перейдите по ссылке для оплаты: ${paymentLink}`);
+
+        // Сохраняем данные в Airtable
+        const lessons = selectedPlan.lessons;
+
+        const date = new Date().toLocaleDateString(); // Текущая дата
+        await sendTwoToAirtable(
+          tgId,
+          paymentId,
+          selectedPlan.sum,
+          lessons,
+          tag,
+          date,
+          ctx.from.username
+        );
+      } else {
+        await ctx.reply(
+          "Пользователь не найден. Пожалуйста, попробуйте снова."
+        );
       }
     } catch (error) {
       console.error("Произошла ошибка:", error);
