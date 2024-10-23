@@ -988,7 +988,7 @@ bot.on("callback_query:data", async (ctx) => {
     }
   } else if (action.startsWith("buy")) {
     // Генерация ссылки для оплаты
-    const actionInfo = actionData[buy];
+    const actionInfo = actionData[action];
     const { paymentLink, paymentId } = await generateSecondPaymentLinkForStudio(
       action,
       session.email
