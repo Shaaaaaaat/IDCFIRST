@@ -81,6 +81,32 @@ async function generatePaymentLinkForStudio(studio, email) {
   }
 }
 
+async function generateSecondPaymentLinkForStudio(studio, email) {
+  const studioInfo = studioDetails[studio];
+
+  if (!studioInfo) {
+    throw new Error("Студия не найдена");
+  }
+
+  const paymentId = generateUniqueId(); // Генерируем уникальный ID для платежа
+  const sum = 1;
+  const currency = studioInfo.currency;
+  const e = email;
+
+  if (studioInfo.paymentSystem === "robokassa") {
+    // Генерация ссылки для Robokassa
+    const paymentLink = generatePaymentLink(paymentId, sum, e);
+    return { paymentLink, paymentId };
+  } else if (studioInfo.paymentSystem === "stripe") {
+    // Генерация ссылки для Stripe
+    const priceId = await createStripePrice(studioInfo.price, currency, studio);
+    const paymentLink = await createStripePaymentLink(priceId, paymentId);
+    return { paymentLink, paymentId };
+  } else {
+    throw new Error("Неизвестная платёжная система");
+  }
+}
+
 // Функция для создания цены в Stripe
 async function createStripePrice(amount, currency, productName) {
   const price = await stripe.prices.create({
@@ -924,11 +950,17 @@ bot.on("callback_query:data", async (ctx) => {
     }
   } else if (action.startsWith("buy")) {
     // Генерация ссылки для оплаты
-    const userInfo = await getUserInfo(tgId);
-    const { tag, currency } = userInfo;
-    const selectedPlan = actionData[tag]; // Получаем выбранный план по тегу
-    const paymentId = generateUniqueId(); // Генерация уникального ID для платежа
-    let paymentLink;
+
+    const { paymentLink, paymentId } = await generateSecondPaymentLinkForStudio(
+      session.studio,
+      session.email
+    );
+
+    // const userInfo = await getUserInfo(tgId);
+    // const { tag, currency } = userInfo;
+    // const selectedPlan = actionData[tag]; // Получаем выбранный план по тегу
+    // const paymentId = generateUniqueId(); // Генерация уникального ID для платежа
+    // let paymentLink;
 
     if (currency === "RUB") {
       // Если валюта RUB, генерируем ссылку через Робокассу
