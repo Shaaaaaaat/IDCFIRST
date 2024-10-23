@@ -81,25 +81,25 @@ async function generatePaymentLinkForStudio(studio, email) {
   }
 }
 
-async function generateSecondPaymentLinkForStudio(studio, email) {
-  const studioInfo = studioDetails[studio];
+async function generateSecondPaymentLinkForStudio(buy, email) {
+  const actionInfo = actionData[buy];
 
-  if (!studioInfo) {
-    throw new Error("Студия не найдена");
+  if (!actionInfo) {
+    throw new Error("Информация не найдена");
   }
 
   const paymentId = generateUniqueId(); // Генерируем уникальный ID для платежа
-  const sum = 1;
-  const currency = studioInfo.currency;
+  const sum = actionInfo.sum;
+  const currency = actionInfo.currency;
   const e = email;
 
-  if (studioInfo.paymentSystem === "robokassa") {
+  if (actionInfo.paymentSystem === "robokassa") {
     // Генерация ссылки для Robokassa
     const paymentLink = generatePaymentLink(paymentId, sum, e);
     return { paymentLink, paymentId };
-  } else if (studioInfo.paymentSystem === "stripe") {
+  } else if (actionInfo.paymentSystem === "stripe") {
     // Генерация ссылки для Stripe
-    const priceId = await createStripePrice(studioInfo.price, currency, studio);
+    const priceId = await createStripePrice(actionInfo.sum, currency, studio);
     const paymentLink = await createStripePaymentLink(priceId, paymentId);
     return { paymentLink, paymentId };
   } else {
@@ -136,7 +136,13 @@ async function createStripePaymentLink(priceId, paymentId) {
 }
 
 const actionData = {
-  buy_13200_msc_ycg: { sum: 13200, lessons: 12, tag: "MSC_group_YCG" },
+  buy_13200_msc_ycg: {
+    sum: 13200,
+    lessons: 12,
+    tag: "MSC_group_YCG",
+    currency: "RUB",
+    paymentSystem: "robokassa",
+  },
   buy_1400_msc_ycg: { sum: 1400, lessons: 1, tag: "MSC_group_YCG" },
   buy_3600_personal_mscycg: { sum: 3600, lessons: 1, tag: "MSC_personal_YCG" },
   buy_32400_personal_mscycg: {
@@ -952,7 +958,7 @@ bot.on("callback_query:data", async (ctx) => {
     // Генерация ссылки для оплаты
 
     const { paymentLink, paymentId } = await generateSecondPaymentLinkForStudio(
-      session.studio,
+      action,
       session.email
     );
 
@@ -960,13 +966,13 @@ bot.on("callback_query:data", async (ctx) => {
     await ctx.reply(`Перейдите по ссылке для оплаты: ${paymentLink}`);
 
     // Сохраняем данные в Airtable
-    const lessons = selectedPlan.lessons;
+    const lessons = actionInfo.lessons;
 
     const date = new Date().toLocaleDateString(); // Текущая дата
     await sendTwoToAirtable(
       tgId,
       paymentId,
-      selectedPlan.sum,
+      actionInfo.sum,
       lessons,
       tag,
       date,
