@@ -672,6 +672,38 @@ async function sendTwoToAirtable(tgId, invId, sum, lessons, tag, date, nick) {
   }
 }
 
+// Функция для отправки данных в Airtable 2
+async function thirdTwoToAirtable(tgId, invId, sum, lessons, tag) {
+  const apiKey = process.env.AIRTABLE_API_KEY;
+  const baseId = process.env.AIRTABLE_BASE_ID;
+  const buyId = process.env.AIRTABLE_BUY_ID;
+
+  const url = `https://api.airtable.com/v0/${baseId}/${buyId}`;
+  const headers = {
+    Authorization: `Bearer ${apiKey}`,
+    "Content-Type": "application/json",
+  };
+
+  const data = {
+    fields: {
+      tgId: tgId,
+      inv_id: invId,
+      Sum: sum,
+      Lessons: lessons,
+      Tag: tag,
+    },
+  };
+
+  try {
+    await axios.post(url, data, { headers });
+  } catch (error) {
+    console.error(
+      "Error sending data to Airtable:",
+      error.response ? error.response.data : error.message
+    );
+  }
+}
+
 // Создаем и настраиваем Express-приложение
 const app = express();
 app.use(bodyParser.json()); // Используем JSON для обработки запросов от Telegram и Робокассы
@@ -965,18 +997,12 @@ bot.on("callback_query:data", async (ctx) => {
     // Отправляем пользователю ссылку на оплату
     await ctx.reply(`Перейдите по ссылке для оплаты: ${paymentLink}`);
 
-    // Сохраняем данные в Airtable
-    const lessons = actionInfo.lessons;
-
-    const date = new Date().toLocaleDateString(); // Текущая дата
-    await sendTwoToAirtable(
-      tgId,
+    await thirdTwoToAirtable(
+      ctx.from.id,
       paymentId,
-      actionInfo.sum,
-      lessons,
-      tag,
-      date,
-      ctx.from.username
+      action.sum,
+      action.lessons,
+      action.tag
     );
   } else if (action.startsWith("a_net")) {
     await ctx.reply(`Ну жаль`);
