@@ -924,7 +924,7 @@ bot.on("callback_query:data", async (ctx) => {
         const paymentId = generateUniqueId(); // Генерация уникального ID для платежа
         let paymentLink;
 
-        if (selectedPlan) {
+        if (action.includes("buy")) {
           if (currency === "RUB") {
             // Если валюта RUB, генерируем ссылку через Робокассу
             paymentLink = generatePaymentLink(
