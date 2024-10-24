@@ -143,8 +143,20 @@ const actionData = {
     currency: "RUB",
     paymentSystem: "robokassa",
   },
-  buy_1400_msc_ycg: { sum: 1400, lessons: 1, tag: "MSC_group_YCG" },
-  buy_3600_personal_mscycg: { sum: 3600, lessons: 1, tag: "MSC_personal_YCG" },
+  buy_1400_msc_ycg: {
+    sum: 1400,
+    lessons: 1,
+    tag: "MSC_group_YCG",
+    currency: "RUB",
+    paymentSystem: "robokassa",
+  },
+  buy_3600_personal_mscycg: {
+    sum: 3600,
+    lessons: 1,
+    tag: "MSC_personal_YCG",
+    currency: "RUB",
+    paymentSystem: "robokassa",
+  },
   buy_32400_personal_mscycg: {
     sum: 32400,
     lessons: 10,
