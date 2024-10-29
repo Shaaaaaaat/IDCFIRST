@@ -1267,7 +1267,7 @@ bot.on("message:text", async (ctx) => {
         const reminderDelay = reminderTimeUTC - currentTime;
 
         await ctx.reply(
-          `Вы выбрали ${userMessage}. Я свяжусь с вами за два дня до этой даты!`
+          `Вы выбрали ${userMessage}. Я свяжусь с вами за два дня до этой даты! \n\nЕсли у вас возникнут вопросы, вы всегда можете обратиться к нашему менеджеру Никите: @IDC_Manager`
         );
 
         if (reminderDelay > 0) {
