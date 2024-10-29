@@ -1191,7 +1191,7 @@ bot.on("message:text", async (ctx) => {
     await ctx.reply(priceAndSchedule);
   } else if (userMessage === "Назад") {
     // Удаляем стационарное меню без отправки нового сообщения
-    await ctx.reply("", {
+    await ctx.reply("Выберите студию или поменяйте город:", {
       reply_markup: {
         remove_keyboard: true, // Удаляет текущее стационарное меню
       },
@@ -1224,7 +1224,7 @@ bot.on("message:text", async (ctx) => {
     }
 
     // Отправляем сообщение с выбором студии
-    await ctx.reply("Выберите студию или поменяйте город:", {
+    await ctx.reply("", {
       reply_markup: studiosKeyboard,
     });
   } else if (userMessage === "FAQ") {
