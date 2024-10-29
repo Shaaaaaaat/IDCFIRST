@@ -137,7 +137,7 @@ async function createStripePaymentLink(priceId, paymentId) {
 
 const actionData = {
   buy_13200_msc_ycg: {
-    sum: 13200,
+    sum: 1,
     lessons: 12,
     tag: "MSC_group_YCG",
     currency: "RUB",
@@ -1120,7 +1120,7 @@ bot.on("callback_query:data", async (ctx) => {
         const keyboard = generateKeyboard(tag);
         if (keyboard) {
           await ctx.reply(
-            "Супер, рад слышать! Чтобы записаться на следующую тренировку, пожалуйста, выберите и оплатите подходящий тариф из списка ниже:",
+            "Рад слышать! Чтобы записаться на следующую тренировку, пожалуйста, выберите и оплатите подходящий тариф из списка ниже:",
             {
               reply_markup: keyboard,
             }
