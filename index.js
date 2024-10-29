@@ -1219,13 +1219,8 @@ bot.on("message:text", async (ctx) => {
 
     // Отправляем сообщение с выбором студии
     await ctx.reply("Выберите студию или поменяйте город:", {
-      // inline_keyboard: studiosKeyboard.inline_keyboard,
       reply_markup: studiosKeyboard,
-      // remove_keyboard: true,
-    });
-    // Убираем текущее стационарное меню
-    await ctx.reply({
-      reply_markup: { remove_keyboard: true },
+      remove_keyboard: true,
     });
   } else if (userMessage === "FAQ") {
     await ctx.reply(
