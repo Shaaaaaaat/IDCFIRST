@@ -1191,7 +1191,11 @@ bot.on("message:text", async (ctx) => {
     await ctx.reply(priceAndSchedule);
   } else if (userMessage === "Назад") {
     // Удаляем стационарное меню без отправки нового сообщения
-    await ctx.reply("", { reply_markup: { remove_keyboard: true } });
+    await ctx.reply(".", {
+      reply_markup: {
+        remove_keyboard: true, // Удаляет текущее стационарное меню
+      },
+    });
     // Возвращаем клавиатуру для выбора студии в зависимости от города
     let studiosKeyboard;
 
