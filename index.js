@@ -1190,6 +1190,8 @@ bot.on("message:text", async (ctx) => {
     const priceAndSchedule = getPriceAndSchedule(session.studio);
     await ctx.reply(priceAndSchedule);
   } else if (userMessage === "Назад") {
+    // Удаляем стационарное меню без отправки нового сообщения
+    await ctx.reply("", { reply_markup: { remove_keyboard: true } });
     // Возвращаем клавиатуру для выбора студии в зависимости от города
     let studiosKeyboard;
 
@@ -1220,7 +1222,6 @@ bot.on("message:text", async (ctx) => {
     // Отправляем сообщение с выбором студии
     await ctx.reply("Выберите студию или поменяйте город:", {
       reply_markup: studiosKeyboard,
-      remove_keyboard: true,
     });
   } else if (userMessage === "FAQ") {
     await ctx.reply(
