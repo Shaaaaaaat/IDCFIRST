@@ -1363,7 +1363,7 @@ bot.on("message:text", async (ctx) => {
         "Не удалось получить информацию о вашем теге. Пожалуйста, попробуйте позже."
       );
     }
-  } else if (userMessage === "узнать баланс") {
+  } else if (userMessage === "Узнать баланс") {
     console.log("Нажал кнопку Узнать баланс");
     const tgId = ctx.from.id;
     const result = await getUserInfo(tgId);
