@@ -9,6 +9,10 @@ const axios = require("axios");
 const connectDB = require("./database");
 const Session = require("./sessionModel");
 
+const userState = {};
+// Логируем запуск приложения с информацией о пользователе
+console.log("Приложение запущено");
+
 // Создаем экземпляр бота
 const bot = new Bot(process.env.BOT_API_KEY); // Ваш API ключ от Telegram бота
 
@@ -137,7 +141,7 @@ async function createStripePaymentLink(priceId, paymentId) {
 
 const actionData = {
   buy_13200_msc_ycg: {
-    sum: 1,
+    sum: 13200,
     lessons: 12,
     tag: "MSC_group_YCG",
     currency: "RUB",
@@ -518,7 +522,7 @@ const buttonsData = {
 
 const studioDetails = {
   "м. 1905г.": {
-    price: 1,
+    price: 950,
     currency: "RUB",
     tag: "01MSC_group_YCG_start",
     paymentSystem: "robokassa", // Использовать Robokassa для России
@@ -1005,6 +1009,12 @@ bot.on("callback_query:data", async (ctx) => {
         .row()
         .add({ text: "Ереван", callback_data: "city_yerevan" }),
     });
+  }
+  if (action === "deposit") {
+    userState[tgId] = { awaitingDeposit: true };
+    await ctx.reply("Введите сумму депозита:");
+    await ctx.answerCallbackQuery();
+    return;
   } else if (action === "edit_info") {
     await ctx.reply(messages.editChoice, {
       reply_markup: new InlineKeyboard()
@@ -1182,6 +1192,187 @@ bot.on("message:text", async (ctx) => {
     // Устанавливаем этап в сессии
     session.step = "awaiting_name";
     await session.save(); // Сохраняем состояние сессии
+  } else if (userState[tgId] && userState[tgId].awaitingDeposit) {
+    const text = ctx.message.text.trim().toLowerCase();
+    const tgId = ctx.from.id;
+    const sum = parseFloat(text);
+    if (isNaN(sum) || sum <= 0) {
+      await ctx.reply("Пожалуйста, введите корректную сумму.");
+      return;
+    }
+    // Получаем информацию о пользователе
+    const userInfo = await getUserInfo(tgId);
+    if (!userInfo) {
+      await ctx.reply("Не удалось получить информацию о пользователе.");
+      return;
+    }
+
+    const paymentId = generateUniqueId();
+    const paymentLink = generatePaymentLink(paymentId, sum, userInfo.email);
+    await ctx.reply(`Отлично! Перейдите по ссылке для оплаты: ${paymentLink}`);
+
+    // Отправляем данные о депозите в Airtable
+    await sendTwoToAirtable(
+      tgId,
+      paymentId,
+      sum,
+      0,
+      "deposit",
+      0,
+      ctx.from.username
+    );
+
+    // Сбрасываем состояние пользователя
+    delete userState[tgId];
+    return;
+  }
+
+  // Если сообщение начинается с '/', это команда, и мы её обрабатываем отдельно
+  else if (text.startsWith("/")) {
+    switch (text) {
+      case "/group":
+        console.log("Переключил на /group");
+        await ctx.reply("Переключено на групповые тренировки.", {
+          reply_markup: {
+            keyboard: new Keyboard()
+              .text("Узнать баланс")
+              .text("Купить групповые тренировки")
+              .build(),
+            resize_keyboard: true,
+          },
+        });
+        break;
+      case "/personal":
+        console.log("Переключил на /personal");
+        await ctx.reply("Переключено на персональные тренировки.", {
+          reply_markup: {
+            keyboard: new Keyboard()
+              .text("Узнать баланс")
+              .text("Купить персональные тренировки")
+              .build(),
+            resize_keyboard: true,
+          },
+        });
+        break;
+      case "/online":
+        console.log("Переключил на /online");
+        await ctx.reply("Переключено на онлайн тренировки.", {
+          reply_markup: {
+            keyboard: new Keyboard()
+              .text("Узнать баланс")
+              .text("Купить онлайн тренировки")
+              .build(),
+            resize_keyboard: true,
+          },
+        });
+        break;
+      case "/operator":
+        console.log("Вызвал /operator");
+        await ctx.reply(
+          "Если у вас остались вопросы, вы можете написать нашему менеджеру Никите: @IDC_Manager, он подскажет 😉"
+        );
+        break;
+      default:
+        await ctx.reply("Неизвестная команда. Попробуйте снова.");
+    }
+    return; // Завершаем обработку, чтобы не продолжать ниже
+  }
+
+  // Обработчик для кнопки "Купить тренировки"
+  if (text === "купить групповые тренировки") {
+    const tgId = ctx.from.id;
+    const userInfo = await getUserInfo(tgId);
+    console.log("Нажал купить групповые тренировки");
+
+    if (userInfo) {
+      const newString = userInfo.tag
+        .replace("personal", "group")
+        .replace("ds", "dd");
+      const keyboard = generateKeyboard(newString);
+      if (keyboard) {
+        await ctx.reply("Выберите тариф:", {
+          reply_markup: keyboard,
+        });
+      } else {
+        await ctx.reply(
+          "Ваш тег не распознан. Пожалуйста, обратитесь к поддержке."
+        );
+      }
+    } else {
+      await ctx.reply(
+        "Не удалось получить информацию о вашем теге. Пожалуйста, попробуйте позже."
+      );
+    }
+  } else if (text === "купить персональные тренировки") {
+    const tgId = ctx.from.id;
+    const userInfo = await getUserInfo(tgId);
+    console.log("нажал купить персональные тренировки");
+    if (userInfo) {
+      const newString = userInfo.tag
+        .replace("group", "personal")
+        .replace("ds", "dd");
+      const keyboard = generateKeyboard(newString);
+      if (keyboard) {
+        await ctx.reply("Выберите тариф:", {
+          reply_markup: keyboard,
+        });
+      } else {
+        await ctx.reply(
+          "Ваш тег не распознан. Пожалуйста, обратитесь к поддержке."
+        );
+      }
+    } else {
+      await ctx.reply(
+        "Не удалось получить информацию о вашем теге. Пожалуйста, попробуйте позже."
+      );
+    }
+  } else if (text === "купить онлайн тренировки") {
+    const tgId = ctx.from.id;
+    const userInfo = await getUserInfo(tgId);
+    console.log("нажал купить онлайн тренировки");
+
+    if (userInfo.tag === "ds_dasha_eur") {
+      const keyboard = generateKeyboard(userInfo.tag);
+      if (keyboard) {
+        await ctx.reply("Выберите тариф:", {
+          reply_markup: keyboard,
+        });
+      } else {
+        await ctx.reply(
+          "Ваш тег не распознан. Пожалуйста, обратитесь к поддержке @IDC_Manager."
+        );
+      }
+    } else if (!userInfo.tag.includes("ds_dasha_eur")) {
+      const newString = userInfo.tag.replace(userInfo.tag, "ds_dasha_rub");
+      const keyboard = generateKeyboard(newString);
+      if (keyboard) {
+        await ctx.reply("Выберите тариф:", {
+          reply_markup: keyboard,
+        });
+      } else {
+        await ctx.reply(
+          "Ваш тег не распознан. Пожалуйста, обратитесь к поддержке @IDC_Manager."
+        );
+      }
+    } else {
+      await ctx.reply(
+        "Не удалось получить информацию о вашем теге. Пожалуйста, попробуйте позже."
+      );
+    }
+  } else if (text === "узнать баланс") {
+    console.log("Нажал кнопку Узнать баланс");
+    const tgId = ctx.from.id;
+    const result = await getUserInfo(tgId);
+
+    if (result !== null) {
+      await ctx.reply(
+        `Ваш текущий баланс: ${result.balance} ${result.currency}`
+      );
+    } else {
+      await ctx.reply(
+        "Не удалось получить информацию о балансе. Пожалуйста, попробуйте позже."
+      );
+    }
   } else if (userMessage === "Как проходят тренировки") {
     await ctx.reply(
       "У нас не обычные групповые тренировки, где все ученики делают одинаковые задания — у нас персональный подход.\n\nНа первом занятии тренер определит ваш уровень физической подготовки и обсудит основные цели. После этого все тренировки будут написаны с учетом вашего уровня и целей 🔥\n\nМы это делаем с помощью мобильного приложения, где у вас будет свой личный кабинет, история тренировок и результаты❗️\n\nТак мы добиваемся наиболее эффективного подхода для наших учеников 🤍"
@@ -1371,29 +1562,41 @@ bot.on("message:text", async (ctx) => {
   }
 });
 
-// Обработчик команды /operator
-bot.command("operator", async (ctx) => {
-  try {
-    await ctx.reply(
-      "Если у вас остались вопросы, вы можете написать нашему менеджеру Никите: @IDC_Manager, он подскажет 😉"
-    );
-  } catch (error) {
-    console.error("Произошла ошибка:", error);
-  }
-});
-
 // Функция для обработки сценария, если пользователь уже есть в базе
 async function handleExistingUserScenario(ctx) {
   try {
-    // Например, можно отправить приветственное сообщение с предложением сразу выбрать студию
-    await ctx.reply("Вы уже являетесь нашим учеником :)");
+    const userInfo = await getUserInfo(tgId);
+    if (userInfo) {
+      const { tag } = userInfo;
 
-    // // Здесь можно также задать какой-либо шаг сессии, если необходимо
-    // const session = await Session.findOne({ userId: ctx.from.id.toString() });
-    // session.step = "awaiting_existing_user_action";
-    // await session.save();
+      if (tag.includes("ds")) {
+        console.log("получил кнопки меню (ds)");
+        const keyboard = new Keyboard()
+          .text("Узнать баланс")
+          .text("Купить онлайн тренировки");
+        await ctx.reply("Привет! Выберите, что вас интересует:", {
+          reply_markup: { keyboard: keyboard.build(), resize_keyboard: true },
+        });
+      } else if (tag.includes("group")) {
+        console.log("получил кнопки меню (group)");
+        const keyboard = new Keyboard()
+          .text("Узнать баланс")
+          .text("Купить групповые тренировки");
+        await ctx.reply("Привет! Выберите, что вас интересует:", {
+          reply_markup: { keyboard: keyboard.build(), resize_keyboard: true },
+        });
+      } else if (tag.includes("personal")) {
+        console.log("получил кнопки меню (personal)");
+        const keyboard = new Keyboard()
+          .text("Узнать баланс")
+          .text("Купить персональные тренировки");
+        await ctx.reply("Привет! Выберите, что вас интересует:", {
+          reply_markup: { keyboard: keyboard.build(), resize_keyboard: true },
+        });
+      }
+    }
   } catch (error) {
-    console.error("Ошибка при обработке существующего пользователя:", error);
+    console.error("Произошла ошибка:", error);
   }
 }
 
