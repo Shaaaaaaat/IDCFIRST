@@ -1283,7 +1283,7 @@ bot.on("message:text", async (ctx) => {
   }
 
   // Обработчик для кнопки "Купить тренировки"
-  if (userMessage === "купить групповые тренировки") {
+  if (userMessage === "Купить групповые тренировки") {
     // const tgId = ctx.from.id;
     const userInfo = await getUserInfo(tgId);
     console.log("Нажал купить групповые тренировки");
