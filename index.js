@@ -1232,7 +1232,7 @@ bot.on("message:text", async (ctx) => {
   }
 
   // Если сообщение начинается с '/', это команда, и мы её обрабатываем отдельно
-  else if (text.startsWith("/")) {
+  else if (userMessage.startsWith("/")) {
     switch (text) {
       case "/group":
         console.log("Переключил на /group");
@@ -1283,7 +1283,7 @@ bot.on("message:text", async (ctx) => {
   }
 
   // Обработчик для кнопки "Купить тренировки"
-  if (text === "купить групповые тренировки") {
+  if (userMessage === "купить групповые тренировки") {
     // const tgId = ctx.from.id;
     const userInfo = await getUserInfo(tgId);
     console.log("Нажал купить групповые тренировки");
@@ -1307,7 +1307,7 @@ bot.on("message:text", async (ctx) => {
         "Не удалось получить информацию о вашем теге. Пожалуйста, попробуйте позже."
       );
     }
-  } else if (text === "купить персональные тренировки") {
+  } else if (userMessage === "купить персональные тренировки") {
     const tgId = ctx.from.id;
     const userInfo = await getUserInfo(tgId);
     console.log("нажал купить персональные тренировки");
@@ -1330,7 +1330,7 @@ bot.on("message:text", async (ctx) => {
         "Не удалось получить информацию о вашем теге. Пожалуйста, попробуйте позже."
       );
     }
-  } else if (text === "купить онлайн тренировки") {
+  } else if (userMessage === "купить онлайн тренировки") {
     const tgId = ctx.from.id;
     const userInfo = await getUserInfo(tgId);
     console.log("нажал купить онлайн тренировки");
