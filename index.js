@@ -1363,7 +1363,7 @@ bot.on("message:text", async (ctx) => {
         "Не удалось получить информацию о вашем теге. Пожалуйста, попробуйте позже."
       );
     }
-  } else if (text === "узнать баланс") {
+  } else if (userMessage === "узнать баланс") {
     console.log("Нажал кнопку Узнать баланс");
     const tgId = ctx.from.id;
     const result = await getUserInfo(tgId);
@@ -1602,28 +1602,6 @@ async function handleExistingUserScenario(ctx) {
   } catch (error) {
     console.error("Произошла ошибка:", error);
   }
-
-  // Обработчик выбора города
-  bot.on("callback_query:data", async (ctx) => {
-    const action = ctx.callbackQuery.data;
-    const session = await Session.findOne({ userId: ctx.from.id.toString() });
-
-    if (text === "узнать баланс") {
-      console.log("Нажал кнопку Узнать баланс");
-      const tgId = ctx.from.id;
-      const result = await getUserInfo(tgId);
-
-      if (result !== null) {
-        await ctx.reply(
-          `Ваш текущий баланс: ${result.balance} ${result.currency}`
-        );
-      } else {
-        await ctx.reply(
-          "Не удалось получить информацию о балансе. Пожалуйста, попробуйте позже."
-        );
-      }
-    }
-  });
 }
 
 // Запуск бота
