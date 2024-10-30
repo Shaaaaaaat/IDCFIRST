@@ -48,12 +48,12 @@ function generatePaymentLink(paymentId, sum, email) {
 }
 
 // Функция для создания объекта Price
-async function createStripePrice() {
+async function createStripePriceAMD() {
   const price = await stripe.prices.create({
     unit_amount: 1000, // 10 евро в центах
     currency: "amd",
     product_data: {
-      name: "Webinar Registration",
+      name: "Armenia",
     },
   });
   return price.id;
@@ -75,9 +75,13 @@ async function generatePaymentLinkForStudio(studio, email) {
     // Генерация ссылки для Robokassa
     const paymentLink = generatePaymentLink(paymentId, sum, e);
     return { paymentLink, paymentId };
-  } else if (studioInfo.paymentSystem === "stripe") {
+  } else if (studioInfo.paymentSystem === "stripeAMD") {
     // Генерация ссылки для Stripe
-    const priceId = await createStripePrice(studioInfo.price, currency, studio);
+    const priceId = await createStripePriceAMD(
+      studioInfo.price,
+      currency,
+      studio
+    );
     const paymentLink = await createStripePaymentLink(priceId, paymentId);
     return { paymentLink, paymentId };
   } else {
@@ -339,14 +343,14 @@ const actionData = {
     lessons: 12,
     tag: "YVN_group_GFG",
     currency: "AMD",
-    paymentSystem: "stripe",
+    paymentSystem: "stripeAMD",
   },
   buy_7000_yvn_amd: {
     sum: 249,
     lessons: 1,
     tag: "YVN_group_GFG",
     currency: "AMD",
-    paymentSystem: "stripe",
+    paymentSystem: "stripeAMD",
   },
 };
 
@@ -549,7 +553,7 @@ const studioDetails = {
     price: 100,
     currency: "AMD",
     tag: "01YVN_group_GFG_start",
-    paymentSystem: "stripe", // Использовать Stripe для Еревана
+    paymentSystem: "stripeAMD", // Использовать Stripe для Еревана
   },
 };
 
@@ -1598,6 +1602,28 @@ async function handleExistingUserScenario(ctx) {
   } catch (error) {
     console.error("Произошла ошибка:", error);
   }
+
+  // Обработчик выбора города
+  bot.on("callback_query:data", async (ctx) => {
+    const action = ctx.callbackQuery.data;
+    const session = await Session.findOne({ userId: ctx.from.id.toString() });
+
+    if (text === "узнать баланс") {
+      console.log("Нажал кнопку Узнать баланс");
+      const tgId = ctx.from.id;
+      const result = await getUserInfo(tgId);
+
+      if (result !== null) {
+        await ctx.reply(
+          `Ваш текущий баланс: ${result.balance} ${result.currency}`
+        );
+      } else {
+        await ctx.reply(
+          "Не удалось получить информацию о балансе. Пожалуйста, попробуйте позже."
+        );
+      }
+    }
+  });
 }
 
 // Запуск бота
