@@ -1011,7 +1011,7 @@ bot.on("callback_query:data", async (ctx) => {
     });
   }
   if (action === "deposit") {
-    userState[tgId] = { awaitingDeposit: true };
+    userState[ctx.from.id] = { awaitingDeposit: true };
     await ctx.reply("Введите сумму депозита:");
     await ctx.answerCallbackQuery();
     return;
@@ -1565,7 +1565,7 @@ bot.on("message:text", async (ctx) => {
 // Функция для обработки сценария, если пользователь уже есть в базе
 async function handleExistingUserScenario(ctx) {
   try {
-    const userInfo = await getUserInfo(tgId);
+    const userInfo = await getUserInfo(ctx.from.id);
     if (userInfo) {
       const { tag } = userInfo;
 
