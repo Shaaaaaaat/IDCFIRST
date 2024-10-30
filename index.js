@@ -1179,6 +1179,7 @@ bot.on("callback_query:data", async (ctx) => {
 bot.on("message:text", async (ctx) => {
   const session = await Session.findOne({ userId: ctx.from.id.toString() });
   const userMessage = ctx.message.text;
+  const tgId = ctx.from.id;
 
   // Обработка кнопок для студий
   if (userMessage === "Записаться на тренировку") {
@@ -1194,7 +1195,6 @@ bot.on("message:text", async (ctx) => {
     await session.save(); // Сохраняем состояние сессии
   } else if (userState[tgId] && userState[tgId].awaitingDeposit) {
     const text = ctx.message.text.trim().toLowerCase();
-    const tgId = ctx.from.id;
     const sum = parseFloat(text);
     if (isNaN(sum) || sum <= 0) {
       await ctx.reply("Пожалуйста, введите корректную сумму.");
@@ -1280,7 +1280,7 @@ bot.on("message:text", async (ctx) => {
 
   // Обработчик для кнопки "Купить тренировки"
   if (text === "купить групповые тренировки") {
-    const tgId = ctx.from.id;
+    // const tgId = ctx.from.id;
     const userInfo = await getUserInfo(tgId);
     console.log("Нажал купить групповые тренировки");
 
@@ -1362,7 +1362,7 @@ bot.on("message:text", async (ctx) => {
   } else if (text === "узнать баланс") {
     console.log("Нажал кнопку Узнать баланс");
     const tgId = ctx.from.id;
-    const result = await getUserInfo(ctx.from.id);
+    const result = await getUserInfo(tgId);
 
     if (result !== null) {
       await ctx.reply(
