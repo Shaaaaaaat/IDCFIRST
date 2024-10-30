@@ -1233,7 +1233,7 @@ bot.on("message:text", async (ctx) => {
 
   // Если сообщение начинается с '/', это команда, и мы её обрабатываем отдельно
   else if (userMessage.startsWith("/")) {
-    switch (text) {
+    switch (userMessage) {
       case "/group":
         console.log("Переключил на /group");
         await ctx.reply("Переключено на групповые тренировки.", {
