@@ -1197,39 +1197,40 @@ bot.on("message:text", async (ctx) => {
     // Устанавливаем этап в сессии
     session.step = "awaiting_name";
     await session.save(); // Сохраняем состояние сессии
-  } else if (userState[tgId] && userState[tgId].awaitingDeposit) {
-    const text = ctx.message.text.trim().toLowerCase();
-    const sum = parseFloat(text);
-    if (isNaN(sum) || sum <= 0) {
-      await ctx.reply("Пожалуйста, введите корректную сумму.");
-      return;
-    }
-    // Получаем информацию о пользователе
-    const userInfo = await getUserInfo(tgId);
-    if (!userInfo) {
-      await ctx.reply("Не удалось получить информацию о пользователе.");
-      return;
-    }
-
-    const paymentId = generateUniqueId();
-    const paymentLink = generatePaymentLink(paymentId, sum, userInfo.email);
-    await ctx.reply(`Отлично! Перейдите по ссылке для оплаты: ${paymentLink}`);
-
-    // Отправляем данные о депозите в Airtable
-    await sendTwoToAirtable(
-      tgId,
-      paymentId,
-      sum,
-      0,
-      "deposit",
-      0,
-      ctx.from.username
-    );
-
-    // Сбрасываем состояние пользователя
-    delete userState[tgId];
-    return;
   }
+  // else if (userState[tgId] && userState[tgId].awaitingDeposit) {
+  //   const text = ctx.message.text.trim().toLowerCase();
+  //   const sum = parseFloat(text);
+  //   if (isNaN(sum) || sum <= 0) {
+  //     await ctx.reply("Пожалуйста, введите корректную сумму.");
+  //     return;
+  //   }
+  //   // Получаем информацию о пользователе
+  //   const userInfo = await getUserInfo(tgId);
+  //   if (!userInfo) {
+  //     await ctx.reply("Не удалось получить информацию о пользователе.");
+  //     return;
+  //   }
+
+  //   const paymentId = generateUniqueId();
+  //   const paymentLink = generatePaymentLink(paymentId, sum, userInfo.email);
+  //   await ctx.reply(`Отлично! Перейдите по ссылке для оплаты: ${paymentLink}`);
+
+  //   // Отправляем данные о депозите в Airtable
+  //   await sendTwoToAirtable(
+  //     tgId,
+  //     paymentId,
+  //     sum,
+  //     0,
+  //     "deposit",
+  //     0,
+  //     ctx.from.username
+  //   );
+
+  //   // Сбрасываем состояние пользователя
+  //   delete userState[tgId];
+  //   return;
+  // }
 
   // Если сообщение начинается с '/', это команда, и мы её обрабатываем отдельно
   else if (userMessage.startsWith("/")) {
@@ -1283,7 +1284,7 @@ bot.on("message:text", async (ctx) => {
   }
 
   // Обработчик для кнопки "Купить тренировки"
-  if (userMessage === "Купить групповые тренировки") {
+  else if (userMessage === "Купить групповые тренировки") {
     // const tgId = ctx.from.id;
     const userInfo = await getUserInfo(tgId);
     console.log("Нажал купить групповые тренировки");
@@ -1307,7 +1308,7 @@ bot.on("message:text", async (ctx) => {
         "Не удалось получить информацию о вашем теге. Пожалуйста, попробуйте позже."
       );
     }
-  } else if (userMessage === "купить персональные тренировки") {
+  } else if (userMessage === "Купить персональные тренировки") {
     const tgId = ctx.from.id;
     const userInfo = await getUserInfo(tgId);
     console.log("нажал купить персональные тренировки");
@@ -1330,7 +1331,7 @@ bot.on("message:text", async (ctx) => {
         "Не удалось получить информацию о вашем теге. Пожалуйста, попробуйте позже."
       );
     }
-  } else if (userMessage === "купить онлайн тренировки") {
+  } else if (userMessage === "Купить онлайн тренировки") {
     const tgId = ctx.from.id;
     const userInfo = await getUserInfo(tgId);
     console.log("нажал купить онлайн тренировки");
