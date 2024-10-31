@@ -1020,7 +1020,7 @@ bot.on("callback_query:data", async (ctx) => {
     await ctx.answerCallbackQuery();
     return;
   } else if (action === "edit_info") {
-    await ctx.reply(messages.editChoice, {
+    await ctx.reply("Что хотите поменять?", {
       reply_markup: new InlineKeyboard()
         .add({ text: "ФИ", callback_data: "edit_name" })
         .add({ text: "Телефон", callback_data: "edit_phone" })
@@ -1516,14 +1516,15 @@ bot.on("message:text", async (ctx) => {
       session.step = "awaiting_email";
       await session.save(); // Сохранение сессии после изменения шага
     } else {
-      await ctx.reply(messages.invalidPhone);
+      await ctx.reply("Вы неверно указали номер, попробуйте еще раз");
     }
   } else if (session.step === "awaiting_email") {
     session.email = ctx.message.text;
-    const confirmationMessage = messages.confirmation
-      .replace("{{ $ФИ }}", session.name)
-      .replace("{{ $Tel }}", session.phone)
-      .replace("{{ $email }}", session.email);
+    const confirmationMessage =
+      "Проверьте введенные данные:\nФИ: {{ $ФИ }},\nТелефон: {{ $Tel }},\nEmail: {{ $email }}\n\nЕсли все верно, подтвердите данные"
+        .replace("{{ $ФИ }}", session.name)
+        .replace("{{ $Tel }}", session.phone)
+        .replace("{{ $email }}", session.email);
 
     await ctx.reply(confirmationMessage, {
       reply_markup: new InlineKeyboard()
@@ -1543,7 +1544,7 @@ bot.on("message:text", async (ctx) => {
       if (/^\+\d+$/.test(phone)) {
         session.phone = phone;
       } else {
-        await ctx.reply(messages.invalidPhone);
+        await ctx.reply("Вы неверно указали номер, попробуйте еще раз");
         return;
       }
     } else if (field === "email") {
