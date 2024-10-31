@@ -243,7 +243,7 @@ const actionData = {
     paymentSystem: "robokassa",
   },
   buy_9600_spb_rtc: {
-    sum: 9600,
+    sum: 1,
     lessons: 12,
     tag: "SPB_group_RTC",
     currency: "RUB",
