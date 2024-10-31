@@ -1551,10 +1551,11 @@ bot.on("message:text", async (ctx) => {
       session.email = ctx.message.text;
     }
 
-    const confirmationMessage = messages.confirmation
-      .replace("{{ $ФИ }}", session.name)
-      .replace("{{ $Tel }}", session.phone)
-      .replace("{{ $email }}", session.email);
+    const confirmationMessage =
+      "Проверьте введенные данные:\nФИ: {{ $ФИ }},\nТелефон: {{ $Tel }},\nEmail: {{ $email }}\n\nЕсли все верно, подтвердите данные"
+        .replace("{{ $ФИ }}", session.name)
+        .replace("{{ $Tel }}", session.phone)
+        .replace("{{ $email }}", session.email);
 
     await ctx.reply(confirmationMessage, {
       reply_markup: new InlineKeyboard()
