@@ -243,7 +243,7 @@ const actionData = {
     paymentSystem: "robokassa",
   },
   buy_9600_spb_rtc: {
-    sum: 1,
+    sum: 9600,
     lessons: 12,
     tag: "SPB_group_RTC",
     currency: "RUB",
@@ -532,7 +532,7 @@ const studioDetails = {
     paymentSystem: "robokassa", // Использовать Robokassa для России
   },
   "м. Петроградская": {
-    price: 2,
+    price: 950,
     currency: "RUB",
     tag: "01SPB_group_RTC_start",
     paymentSystem: "robokassa", // Использовать Robokassa для России
@@ -870,6 +870,14 @@ app.use(bodyParser.json()); // Используем JSON для обработк
 
 // Обработчик команд бота
 bot.command("start", async (ctx) => {
+  const user = ctx.from;
+  console.log("Новый запуск от пользователя:");
+  console.log(`ID: ${user.id}`);
+  console.log(`Имя: ${user.first_name}`);
+  console.log(`Фамилия: ${user.last_name || "не указана"}`);
+  console.log(`Ник: ${user.username || "не указан"}`);
+  console.log(`Команда /start от пользователя: ${user.id}`);
+
   try {
     await Session.findOneAndUpdate(
       { userId: ctx.from.id.toString() },
@@ -887,8 +895,10 @@ bot.command("start", async (ctx) => {
 
     if (userExists) {
       // Если пользователь уже есть в базе, выполняем сценарий для существующих пользователей
+      console.log("Пользователь есть в базе Clients");
       await handleExistingUserScenario(ctx);
     } else {
+      console.log("Пользователя нет в базе Clients");
       // Сохраняем идентификатор записи в сессии
       const airtableId = await sendFirstAirtable(
         ctx.from.id,
@@ -898,7 +908,7 @@ bot.command("start", async (ctx) => {
       const session = await Session.findOne({ userId: ctx.from.id.toString() });
       session.airtableId = airtableId; // Сохраняем airtableId в сессии
       await session.save();
-
+      console.log("Отправил список городов");
       await ctx.reply(
         "Привет! Подскажите, пожалуйста, какой город вас интересует?",
         {
@@ -930,6 +940,7 @@ bot.on("callback_query:data", async (ctx) => {
     let studiosKeyboard;
     if (action === "city_moscow") {
       city = "Москва";
+      console.log("Выбрал Москву, отправил список студий");
       // Кнопки для студий в Москве
       studiosKeyboard = new InlineKeyboard().add({
         text: "м. 1905г.",
@@ -937,6 +948,7 @@ bot.on("callback_query:data", async (ctx) => {
       });
     } else if (action === "city_spb") {
       city = "Санкт-Петербург";
+      console.log("Выбрал Питер, отправил список студий");
       // Кнопки для студий в Санкт-Петербурге
       studiosKeyboard = new InlineKeyboard()
         .add({ text: "м. Петроградкая", callback_data: "studio_rtc" })
@@ -949,6 +961,7 @@ bot.on("callback_query:data", async (ctx) => {
         });
     } else if (action === "city_yerevan") {
       city = "Ереван";
+      console.log("Выбрал Ереван, отправил список студий");
       // Кнопки для студий в Ереване
       studiosKeyboard = new InlineKeyboard().add({
         text: "ул. Бузанда",
@@ -970,14 +983,19 @@ bot.on("callback_query:data", async (ctx) => {
     let studio;
     if (action === "studio_ycg") {
       studio = "м. 1905г.";
+      console.log("Выбрал студию м. 1905г., отправил основное меню");
     } else if (action === "studio_rtc") {
       studio = "м. Петроградская";
+      console.log("Выбрал студию м. Петроградская, отправил основное меню");
     } else if (action === "studio_hkc") {
       studio = "м. Выборгская";
+      console.log("Выбрал студию м. Выборгская, отправил основное меню");
     } else if (action === "studio_spi") {
       studio = "м. Московские Ворота";
+      console.log("Выбрал студию м. Московские ворота, отправил основное меню");
     } else if (action === "studio_gof") {
       studio = "ул. Бузанда";
+      console.log("Выбрал студию ул. Бузанда, отправил основное меню");
     }
 
     // Сохраняем выбранную студию в сессии
@@ -1005,6 +1023,7 @@ bot.on("callback_query:data", async (ctx) => {
   }
   // Добавляем обработчик для "Поменять город"
   else if (action === "change_city") {
+    console.log("Нажал НАЗАД, предложил смену города");
     await ctx.reply("Выберите город:", {
       reply_markup: new InlineKeyboard()
         .add({ text: "Москва", callback_data: "city_moscow" })
@@ -1015,11 +1034,13 @@ bot.on("callback_query:data", async (ctx) => {
     });
   }
   if (action === "deposit") {
+    console.log("Нажал кнопку пополнить депозит");
     userState[ctx.from.id] = { awaitingDeposit: true };
     await ctx.reply("Введите сумму депозита:");
     await ctx.answerCallbackQuery();
     return;
   } else if (action === "edit_info") {
+    console.log("Изменение данных (ФИ, тел., email)");
     await ctx.reply("Что хотите поменять?", {
       reply_markup: new InlineKeyboard()
         .add({ text: "ФИ", callback_data: "edit_name" })
@@ -1041,6 +1062,7 @@ bot.on("callback_query:data", async (ctx) => {
     await session.save(); // Сохранение сессии после изменения шага
   } else if (session.step === "awaiting_confirmation") {
     if (action === "confirm_payment") {
+      console.log("Данные подвердил");
       await ctx.reply("Спасибо! На какую тренировку хотите записаться?", {
         reply_markup: new InlineKeyboard()
           .add({ text: "Групповую", callback_data: "group_training" })
@@ -1066,6 +1088,7 @@ bot.on("callback_query:data", async (ctx) => {
     }
   } else if (session.step === "awaiting_training_type") {
     if (action === "group_training") {
+      console.log("Выбрал групповые тренировки, отправляю расписание");
       // Получаем данные студии из сессии и telegram_id
       const studio = session.studio; // Берем студию из сессии
       const telegramId = ctx.from.id; // ID пользователя Telegram
@@ -1077,6 +1100,7 @@ bot.on("callback_query:data", async (ctx) => {
       session.step = "awaiting_next_step";
       await session.save();
     } else if (action === "personal_training") {
+      console.log("Выбрал персональные тренировки, отправляю сообщение");
       // Персональная тренировка - показываем персональное меню
       await ctx.reply(
         "Вы выбрали персональную тренировку. Свяжитесь с менеджером для уточнения деталей."
@@ -1086,6 +1110,7 @@ bot.on("callback_query:data", async (ctx) => {
       await session.save();
     }
   } else if (action.startsWith("day")) {
+    console.log("Выбрал дату групповой тренировки");
     const buttonText = action.split(",")[1];
     const date = buttonText.match(/\(([^)]+)\)/);
     const str = JSON.stringify(date[1]);
@@ -1096,7 +1121,7 @@ bot.on("callback_query:data", async (ctx) => {
       session.studio,
       session.email
     );
-
+    console.log("Отправляю ссылку для оплаты");
     await ctx.reply(
       `Отлично! Вы выбрали: ${buttonText}. Для подтверждения записи оплатите, пожалуйста, тренировку по ссылке ниже. После оплаты вы получите сообщение с подтверждением записи.`
     );
@@ -1117,6 +1142,7 @@ bot.on("callback_query:data", async (ctx) => {
       ctx.from.username
     );
   } else if (action.startsWith("later")) {
+    console.log("Выбрал позже указать дату групповой тренировки");
     await ctx.reply(
       `Пожалуйста, укажите ориентировочную дату тренировки в формате дд.мм\n\nЗа два дня до этой даты я вышлю актуальное расписание для выбора дня.`
     );
@@ -1125,6 +1151,7 @@ bot.on("callback_query:data", async (ctx) => {
     session.step = "awaiting_later_date";
     await session.save();
   } else if (action.startsWith("a_da")) {
+    console.log("ДА - планиурет продолжать тренировки с нами");
     try {
       const tgId = ctx.from.id;
       const userInfo = await getUserInfo(tgId);
@@ -1153,6 +1180,7 @@ bot.on("callback_query:data", async (ctx) => {
       console.error("Произошла ошибка:", error);
     }
   } else if (action.startsWith("buy")) {
+    console.log("генерирую ссылку для оплаты после нажатия кнопки с тарифом");
     // Генерация ссылки для оплаты
     const actionInfo = actionData[action];
     const { paymentLink, paymentId } = await generateSecondPaymentLinkForStudio(
@@ -1171,6 +1199,7 @@ bot.on("callback_query:data", async (ctx) => {
       actionInfo.tag
     );
   } else if (action.startsWith("a_net")) {
+    console.log("НЕТ - не планиурет продолжать тренировки с нами");
     await ctx.reply(`Ну жаль`);
 
     // Сохраняем статус ожидания даты
@@ -1187,6 +1216,7 @@ bot.on("message:text", async (ctx) => {
 
   // Обработка кнопок для студий
   if (userMessage === "Записаться на тренировку") {
+    console.log("Нажал на кнопку - записаться на тренировку");
     // Удаляем стационарное меню
     await ctx.reply("Пожалуйста, введите ваше ФИО:", {
       reply_markup: {
@@ -1379,13 +1409,16 @@ bot.on("message:text", async (ctx) => {
       );
     }
   } else if (userMessage === "Как проходят тренировки") {
+    console.log("Нажал на кнопку - Как проходят тренировки");
     await ctx.reply(
       "У нас не обычные групповые тренировки, где все ученики делают одинаковые задания — у нас персональный подход.\n\nНа первом занятии тренер определит ваш уровень физической подготовки и обсудит основные цели. После этого все тренировки будут написаны с учетом вашего уровня и целей 🔥\n\nМы это делаем с помощью мобильного приложения, где у вас будет свой личный кабинет, история тренировок и результаты❗️\n\nТак мы добиваемся наиболее эффективного подхода для наших учеников 🤍"
     );
   } else if (userMessage === "Цены и расписание") {
+    console.log("Нажал на кнопку - Цены и расписание");
     const priceAndSchedule = getPriceAndSchedule(session.studio);
     await ctx.reply(priceAndSchedule);
   } else if (userMessage === "Назад") {
+    console.log("Нажал на кнопку - Назад");
     // Удаляем стационарное меню
     await ctx.reply("..", {
       reply_markup: { remove_keyboard: true },
