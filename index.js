@@ -1290,7 +1290,8 @@ bot.on("message:text", async (ctx) => {
   }
   // Проверка на ожидаемый ответ о времени тренировки
   if (session.step === "awaiting_personal_training_details") {
-    const priceTag = session.priceTag; // Достаем priceTag из сессии
+    // const priceTag = session.priceTag; // Достаем priceTag из сессии
+    const priceTag = "MSC_personal_YCG";
 
     // Подтверждаем пользователю, что его запрос отправлен
     await ctx.reply(
