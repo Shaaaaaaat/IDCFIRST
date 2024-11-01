@@ -143,6 +143,14 @@ async function createStripePaymentLink(priceId, paymentId) {
   return paymentLink.url;
 }
 
+const RECIPIENTS_BY_STUDIO = {
+  "м. 1905г.": ["53928252"], // Замените ID на реальные для этой студии
+  "м. Петроградская": ["53928252", "468995031"],
+  "м. Выборгская": ["53928252", "582033795"],
+  "м. Московские Ворота": ["53928252", "206607601"],
+  "ул. Бузанда": ["53928252"],
+};
+
 const actionData = {
   buy_13200_msc_ycg: {
     sum: 13200,
@@ -1119,10 +1127,10 @@ bot.on("callback_query:data", async (ctx) => {
       console.log("Выбрал персональные тренировки, отправляю сообщение");
       // Персональная тренировка - показываем персональное меню
       await ctx.reply(
-        "Вы выбрали персональную тренировку. Свяжитесь с менеджером для уточнения деталей."
+        "Напишите, пожалуйста, в какой день и время вам удобно тренироваться (лучше указать диапазон) и сколько человек будет  — я согласую занятие с тренером и вернусь к вам как можно скорее."
       );
 
-      session.step = "completed";
+      session.step = "awaiting_personal_training_details";
       await session.save();
     }
   } else if (action.startsWith("day")) {
@@ -1262,6 +1270,31 @@ bot.on("message:text", async (ctx) => {
     // Сбрасываем состояние пользователя
     delete userState[tgId];
     return;
+  }
+  // Проверка на ожидаемый ответ о времени тренировки
+  if (session.step === "awaiting_personal_training_details") {
+    const studio = session.studio; // Получаем выбранную студию из сессии
+
+    // Получаем список адресатов для этой студии
+    const recipients = RECIPIENTS_BY_STUDIO[studio] || [];
+
+    // Определяем никнейм пользователя или заменяем на "Без ника"
+    const username = ctx.from.username ? `@${ctx.from.username}` : "Без ника";
+
+    // Отправляем сообщение каждому адресату из списка для этой студии
+    for (const recipientId of recipients) {
+      await bot.api.sendMessage(
+        recipientId,
+        `Запрос на персональную тренировку от ${username}:\n\n${userMessage}`
+      );
+    }
+
+    // Подтверждаем пользователю, что его запрос отправлен
+    await ctx.reply("Спасибо! Я передал ваши пожелания тренеру.");
+
+    // Завершаем сессию, обновляем статус
+    session.step = "completed";
+    await session.save();
   }
 
   // Обработка кнопок для студий
