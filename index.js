@@ -433,6 +433,16 @@ const buttonsData = {
         callback_data: "deposit",
       },
     ],
+    YVNGFG: [
+      {
+        text: "12 занятий (60 000AMD) — действует 6 недель",
+        callback_data: "buy_60000_yvn_amd",
+      },
+      {
+        text: "1 занятие (7 000AMD) — действует 4 недели",
+        callback_data: "buy_7000_yvn_amd",
+      },
+    ],
   },
   personal: {
     MSCYCG: [
@@ -507,16 +517,14 @@ const buttonsData = {
         callback_data: "buy_6000_personal_spbhkc",
       },
     ],
-  },
-  amd: {
     YVNGFG: [
       {
-        text: "12 занятий (60 000AMD) — действует 6 недель",
-        callback_data: "buy_60000_yvn_amd",
+        text: "1 занятие (12 500 AMD) — действует 4 недели",
+        callback_data: "buy_125000_yvngfg",
       },
       {
-        text: "1 занятие (7 000AMD) — действует 4 недели",
-        callback_data: "buy_7000_yvn_amd",
+        text: "Сплит на двоих (17 000 AND) — действует 4 недели",
+        callback_data: "buy_17000_yvngfg",
       },
     ],
   },
@@ -665,6 +673,8 @@ function generateKeyboard(tag) {
   } else if (tag === "ds") {
     buttonsData.ds.forEach((button) => keyboard.add(button).row());
   } else if (tag === "YVN_group_GFG") {
+    buttonsData.amd.YVNGFG.forEach((button) => keyboard.add(button).row());
+  } else if (tag === "YVN_personal_GFG") {
     buttonsData.amd.YVNGFG.forEach((button) => keyboard.add(button).row());
   } else {
     // Если тег не распознан, возвращаем null
@@ -1008,23 +1018,23 @@ bot.on("callback_query:data", async (ctx) => {
     let priceTag;
     if (action === "studio_ycg") {
       studio = "м. 1905г.";
-      priceTag = "MSCYCG";
+      priceTag = "MSC_personal_YCG";
       console.log("Выбрал студию м. 1905г., отправил основное меню");
     } else if (action === "studio_rtc") {
       studio = "м. Петроградская";
-      priceTag = "SPBRTC";
+      priceTag = "SPB_personal_RTC";
       console.log("Выбрал студию м. Петроградская, отправил основное меню");
     } else if (action === "studio_hkc") {
       studio = "м. Выборгская";
-      priceTag = "SPBHKC";
+      priceTag = "SPB_personal_HKC";
       console.log("Выбрал студию м. Выборгская, отправил основное меню");
     } else if (action === "studio_spi") {
       studio = "м. Московские Ворота";
-      priceTag = "SPBSPI";
+      priceTag = "SPB_personal_SPI";
       console.log("Выбрал студию м. Московские ворота, отправил основное меню");
     } else if (action === "studio_gof") {
       studio = "ул. Бузанда";
-      priceTag = "YVNGFG";
+      priceTag = "YVN_personal_YGFG";
       console.log("Выбрал студию ул. Бузанда, отправил основное меню");
     }
 
@@ -1287,21 +1297,23 @@ bot.on("message:text", async (ctx) => {
       "Спасибо! Я свяжусь с тренером и подберу для вас удобное время. Как только согласуем все детали, по ссылке ниже можно будет оплатить занятие для подтверждения записи. Ожидайте, скоро вернусь с новостями 😊"
     );
 
-    // Генерация клавиатуры для персональных тренировок на основе priceTag
-    const keyboard = new InlineKeyboard();
-    buttonsData.personal[priceTag]?.forEach((button) =>
-      keyboard.add(button).row()
-    );
+    // Получаем список адресатов для этой студии
+    const recipients = RECIPIENTS_BY_STUDIO[session.studio] || []; // Берем студию из сессии
+    const username = ctx.from.username ? `@${ctx.from.username}` : "Без ника"; // Определяем никнейм пользователя или заменяем на "Без ника"
 
-    if (keyboard.inline_keyboard.length > 0) {
-      await ctx.reply("Выберите подходящий тариф для оплаты:", {
-        reply_markup: keyboard,
-      });
-    } else {
-      await ctx.reply(
-        "Не удалось найти тарифы для данной студии. Пожалуйста, обратитесь к поддержке."
+    // Отправляем сообщение каждому адресату из списка для этой студии
+    for (const recipientId of recipients) {
+      await bot.api.sendMessage(
+        recipientId,
+        `Запрос на персональную тренировку от ${username}:\n\n${ctx.message.text}`
       );
     }
+
+    // Генерация клавиатуры для персональных тренировок на основе priceTag
+    const keyboard = generateKeyboard(priceTag);
+    await ctx.reply("Выберите подходящий тариф для оплаты:", {
+      reply_markup: keyboard,
+    });
 
     session.step = "completed";
     await session.save();
