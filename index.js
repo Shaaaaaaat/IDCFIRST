@@ -48,12 +48,12 @@ function generatePaymentLink(paymentId, sum, email) {
 }
 
 // Функция для создания объекта Price
-async function createStripePriceAMD() {
+async function createStripePriceAMD(amount, currency, productName) {
   const price = await stripe.prices.create({
-    unit_amount: 1000, // 10 евро в центах
-    currency: "amd",
+    unit_amount: amount * 100, // 100 евро в центах
+    currency: currency.toLowerCase(),
     product_data: {
-      name: "Armenia",
+      name: productName,
     },
   });
   return price.id;
