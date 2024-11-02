@@ -348,14 +348,14 @@ const actionData = {
   buy_105_dsdasha_eur: { sum: 105, lessons: 12, tag: "ds_dasha_eur" },
   buy_249_dsdasha_eur: { sum: 249, lessons: 36, tag: "ds_dasha_eur" },
   buy_60000_yvn_gfg: {
-    sum: 500000000000,
+    sum: 60000,
     lessons: 12,
     tag: "YVN_group_GFG",
     currency: "AMD",
     paymentSystem: "stripeAMD",
   },
   buy_7000_yvn_gfg: {
-    sum: 70000000000,
+    sum: 7000,
     lessons: 1,
     tag: "YVN_group_GFG",
     currency: "AMD",
@@ -597,7 +597,7 @@ const studioDetails = {
     paymentSystem: "robokassa",
   },
   "ул. Бузанда": {
-    price: 5000,
+    price: 500,
     currency: "AMD",
     tag: "01YVN_group_GFG_start",
     paymentSystem: "stripeAMD", // Использовать Stripe для Еревана
