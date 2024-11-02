@@ -688,9 +688,9 @@ function generateKeyboard(tag) {
   } else if (tag === "ds") {
     buttonsData.ds.forEach((button) => keyboard.add(button).row());
   } else if (tag === "YVN_group_GFG") {
-    buttonsData.amd.YVNGFG.forEach((button) => keyboard.add(button).row());
+    buttonsData.group.YVNGFG.forEach((button) => keyboard.add(button).row());
   } else if (tag === "YVN_personal_GFG") {
-    buttonsData.amd.YVNGFG.forEach((button) => keyboard.add(button).row());
+    buttonsData.personal.YVNGFG.forEach((button) => keyboard.add(button).row());
   } else {
     // Если тег не распознан, возвращаем null
     return null;
