@@ -597,7 +597,7 @@ const studioDetails = {
     paymentSystem: "robokassa",
   },
   "ул. Бузанда": {
-    price: 100,
+    price: 500,
     currency: "AMD",
     tag: "01YVN_group_GFG_start",
     paymentSystem: "stripeAMD", // Использовать Stripe для Еревана
