@@ -1239,8 +1239,8 @@ bot.on("callback_query:data", async (ctx) => {
     console.log("генерирую ссылку для оплаты после нажатия кнопки с тарифом");
     // Генерация ссылки для оплаты
     const actionInfo = actionData[action];
-    const { paymentLink, paymentId } = await generateSecondPaymentLinkForStudio(
-      action,
+    const { paymentLink, paymentId } = await generatePaymentLinkForStudio(
+      session.studio,
       session.email
     );
 
