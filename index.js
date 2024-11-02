@@ -144,12 +144,12 @@ async function createStripePaymentLink(priceId, paymentId) {
 }
 
 const RECIPIENTS_BY_STUDIO = {
-  // "м. 1905г.": ["53928252", "865713745"], // Замените ID на реальные для этой студии
+  // "м. 1905г.": ["53928252", "865713745", "346342296"], // Замените ID на реальные для этой студии
   "м. 1905г.": ["5150543861"],
   "м. Петроградская": ["53928252", "865713745", "468995031"],
   "м. Выборгская": ["53928252", "865713745", "582033795"],
   "м. Московские Ворота": ["53928252", "865713745", "206607601"],
-  "ул. Бузанда": ["53928252", "865713745"],
+  "ул. Бузанда": ["53928252", "865713745", "256168227"],
 };
 
 const actionData = {
@@ -347,15 +347,29 @@ const actionData = {
   buy_23400_dsdasha_rub: { sum: 23400, lessons: 36, tag: "ds_dasha_rub" },
   buy_105_dsdasha_eur: { sum: 105, lessons: 12, tag: "ds_dasha_eur" },
   buy_249_dsdasha_eur: { sum: 249, lessons: 36, tag: "ds_dasha_eur" },
-  buy_60000_yvn_amd: {
+  buy_60000_yvn_gfg: {
     sum: 1,
     lessons: 12,
     tag: "YVN_group_GFG",
     currency: "AMD",
     paymentSystem: "stripeAMD",
   },
-  buy_7000_yvn_amd: {
-    sum: 249,
+  buy_7000_yvn_gfg: {
+    sum: 7000,
+    lessons: 1,
+    tag: "YVN_group_GFG",
+    currency: "AMD",
+    paymentSystem: "stripeAMD",
+  },
+  buy_12500_personal_yvngfg: {
+    sum: 12500,
+    lessons: 1,
+    tag: "YVN_group_GFG",
+    currency: "AMD",
+    paymentSystem: "stripeAMD",
+  },
+  buy_17000_personal_yvngfg: {
+    sum: 17000,
     lessons: 1,
     tag: "YVN_group_GFG",
     currency: "AMD",
@@ -437,11 +451,11 @@ const buttonsData = {
     YVNGFG: [
       {
         text: "12 занятий (60 000AMD) — действует 6 недель",
-        callback_data: "buy_60000_yvn_amd",
+        callback_data: "buy_60000_yvn_gfg",
       },
       {
         text: "1 занятие (7 000AMD) — действует 4 недели",
-        callback_data: "buy_7000_yvn_amd",
+        callback_data: "buy_7000_yvn_gfg",
       },
     ],
   },
@@ -521,11 +535,11 @@ const buttonsData = {
     YVNGFG: [
       {
         text: "1 занятие (12 500 AMD) — действует 4 недели",
-        callback_data: "buy_125000_yvngfg",
+        callback_data: "buy_12500_personal_yvngfg",
       },
       {
         text: "Сплит на двоих (17 000 AND) — действует 4 недели",
-        callback_data: "buy_17000_yvngfg",
+        callback_data: "buy_17000_personal_yvngfg",
       },
     ],
   },
@@ -1304,10 +1318,20 @@ bot.on("message:text", async (ctx) => {
 
     // Отправляем сообщение каждому адресату из списка для этой студии
     for (const recipientId of recipients) {
-      await bot.api.sendMessage(
-        recipientId,
-        `Запрос на персональную тренировку от ${username}:\n${ctx.message.text}`
-      );
+      try {
+        await bot.api.sendMessage(
+          recipientId,
+          `Запрос на персональную тренировку от ${username}:\n${ctx.message.text}`
+        );
+      } catch (error) {
+        console.error(
+          `Не удалось отправить сообщение пользователю ${recipientId}:`,
+          error
+        );
+        // Можно добавить дополнительные действия, например:
+        // - логирование ошибки в базе данных
+        // - уведомление администратора о проблеме
+      }
     }
 
     // Генерация клавиатуры для персональных тренировок на основе priceTag
