@@ -1519,8 +1519,8 @@ bot.on("message:text", async (ctx) => {
     const userInfo = await getUserInfo(tgId);
     console.log("нажал купить онлайн тренировки");
 
-    if (userInfo.tag === "ds_dasha_eur") {
-      const keyboard = generateKeyboard(userInfo.tag);
+    if (userInfo.tag.includes("ds") && userInfo.tag.includes("rub")) {
+      const keyboard = generateKeyboard("ds_rub");
       if (keyboard) {
         await ctx.reply("Выберите тариф:", {
           reply_markup: keyboard,
@@ -1530,9 +1530,8 @@ bot.on("message:text", async (ctx) => {
           "Ваш тег не распознан. Пожалуйста, обратитесь к поддержке @IDC_Manager."
         );
       }
-    } else if (!userInfo.tag.includes("ds_dasha_eur")) {
-      const newString = userInfo.tag.replace(userInfo.tag, "ds_dasha_rub");
-      const keyboard = generateKeyboard(newString);
+    } else if (userInfo.tag.includes("ds") && userInfo.tag.includes("eur")) {
+      const keyboard = generateKeyboard("ds_eur");
       if (keyboard) {
         await ctx.reply("Выберите тариф:", {
           reply_markup: keyboard,
