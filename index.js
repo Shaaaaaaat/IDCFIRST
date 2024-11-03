@@ -101,6 +101,7 @@ async function generateSecondPaymentLink(buy, email) {
   const currency = actionInfo.currency;
   const studio = actionInfo.studio;
   const e = email;
+  const ds = "online";
 
   if (actionInfo.paymentSystem === "robokassa") {
     // Генерация ссылки для Robokassa
@@ -117,11 +118,7 @@ async function generateSecondPaymentLink(buy, email) {
     return { paymentLink, paymentId };
   } else if (actionInfo.paymentSystem === "stripeEUR") {
     // Генерация ссылки для Stripe
-    const priceId = await createStripePriceEUR(
-      actionInfo.sum,
-      currency,
-      studio
-    );
+    const priceId = await createStripePriceEUR(actionInfo.sum, currency, ds);
     const paymentLink = await createStripePaymentLink(priceId, paymentId);
     return { paymentLink, paymentId };
   } else {
