@@ -353,38 +353,38 @@ const actionData = {
     currency: "RUB",
     paymentSystem: "robokassa",
   },
-  buy_1100_dsdasha_rub: {
+  buy_1100_ds_rub: {
     sum: 1100,
     lessons: 1,
-    tag: "ds_dasha_rub",
+    tag: "ds_rub",
     currency: "RUB",
     paymentSystem: "robokassa",
   },
-  buy_9600_dsdasha_rub: {
+  buy_9600_ds_rub: {
     sum: 9600,
     lessons: 12,
-    tag: "ds_dasha_rub",
+    tag: "ds_rub",
     currency: "RUB",
     paymentSystem: "robokassa",
   },
-  buy_23400_dsdasha_rub: {
+  buy_23400_ds_rub: {
     sum: 23400,
     lessons: 36,
-    tag: "ds_dasha_rub",
+    tag: "ds_rub",
     currency: "RUB",
     paymentSystem: "robokassa",
   },
-  buy_105_dsdasha_eur: {
+  buy_105_ds_eur: {
     sum: 105,
     lessons: 12,
-    tag: "ds_dasha_eur",
+    tag: "ds_eur",
     currency: "EUR",
     paymentSystem: "stripeEUR",
   },
-  buy_249_dsdasha_eur: {
+  buy_249_ds_eur: {
     sum: 249,
     lessons: 36,
-    tag: "ds_dasha_eur",
+    tag: "ds_eur",
     currency: "EUR",
     paymentSystem: "stripeEUR",
   },
@@ -589,28 +589,28 @@ const buttonsData = {
     ],
   },
   ds: {
-    RUBDASHA: [
+    RUB: [
       {
         text: "1 занятие (1 100₽) — действует 4 недели",
-        callback_data: "buy_1100_dsdasha_rub",
+        callback_data: "buy_1100_ds_rub",
       },
       {
         text: "12 занятий (9 600₽) — действует 6 недель",
-        callback_data: "buy_9600_dsdasha_rub",
+        callback_data: "buy_9600_ds_rub",
       },
       {
         text: "36 занятий (23 400₽) — действует 14 недель",
-        callback_data: "buy_23400_dsdasha_rub",
+        callback_data: "buy_23400_ds_rub",
       },
     ],
-    EURDASHA: [
+    EUR: [
       {
         text: "12 занятий (105€) — действует 6 недель",
-        callback_data: "buy_105_dsdasha_eur",
+        callback_data: "buy_105_ds_eur",
       },
       {
         text: "36 занятий (249€) — действует 14 недель",
-        callback_data: "buy_249_dsdasha_eur",
+        callback_data: "buy_249_ds_eur",
       },
     ],
   },
@@ -710,10 +710,10 @@ function generateKeyboard(tag) {
   let keyboard = new InlineKeyboard();
   console.log("Отправляю кнопки для оплаты");
 
-  if (tag === "ds_dasha_rub") {
-    buttonsData.ds.RUBDASHA.forEach((button) => keyboard.add(button).row());
-  } else if (tag === "ds_dasha_eur") {
-    buttonsData.ds.EURDASHA.forEach((button) => keyboard.add(button).row());
+  if (tag === "ds_rub") {
+    buttonsData.ds.RUB.forEach((button) => keyboard.add(button).row());
+  } else if (tag === "ds_eur") {
+    buttonsData.ds.EUR.forEach((button) => keyboard.add(button).row());
   } else if (tag === "MSC_group_YCG") {
     buttonsData.group.MSCYCG.forEach((button) => keyboard.add(button).row());
   } else if (tag === "SPB_group_SPI") {
@@ -730,8 +730,6 @@ function generateKeyboard(tag) {
     buttonsData.personal.SPBRTC.forEach((button) => keyboard.add(button).row());
   } else if (tag === "SPB_personal_HKC") {
     buttonsData.personal.SPBHKC.forEach((button) => keyboard.add(button).row());
-  } else if (tag === "ds") {
-    buttonsData.ds.forEach((button) => keyboard.add(button).row());
   } else if (tag === "YVN_group_GFG") {
     buttonsData.group.YVNGFG.forEach((button) => keyboard.add(button).row());
   } else if (tag === "YVN_personal_GFG") {
