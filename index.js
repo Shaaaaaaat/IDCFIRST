@@ -1170,12 +1170,8 @@ bot.on("callback_query:data", async (ctx) => {
           ${session.name}, ${session.phone}, ${session.email}`
         );
       } catch (error) {
-        console.error(
-          `Не удалось отправить сообщение`,
-          error
-        );
-
-
+        console.error(`Не удалось отправить сообщение`, error);
+      }
 
       await ctx.reply("Спасибо! На какую тренировку хотите записаться?", {
         reply_markup: new InlineKeyboard()
