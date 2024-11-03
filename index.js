@@ -99,6 +99,7 @@ async function generateSecondPaymentLink(buy, email) {
   const paymentId = generateUniqueId(); // Генерируем уникальный ID для платежа
   const sum = actionInfo.sum;
   const currency = actionInfo.currency;
+  const studio = actionInfo.studio;
   const e = email;
 
   if (actionInfo.paymentSystem === "robokassa") {
@@ -357,6 +358,7 @@ const actionData = {
     tag: "YVN_group_GFG",
     currency: "AMD",
     paymentSystem: "stripeAMD",
+    studio: "ул. Бузанда",
   },
   buy_7000_yvn_gfg: {
     sum: 7000,
@@ -364,6 +366,7 @@ const actionData = {
     tag: "YVN_group_GFG",
     currency: "AMD",
     paymentSystem: "stripeAMD",
+    studio: "ул. Бузанда",
   },
   buy_12500_personal_yvngfg: {
     sum: 12500,
@@ -371,6 +374,7 @@ const actionData = {
     tag: "YVN_group_GFG",
     currency: "AMD",
     paymentSystem: "stripeAMD",
+    studio: "ул. Бузанда",
   },
   buy_17000_personal_yvngfg: {
     sum: 17000,
@@ -378,6 +382,7 @@ const actionData = {
     tag: "YVN_group_GFG",
     currency: "AMD",
     paymentSystem: "stripeAMD",
+    studio: "ул. Бузанда",
   },
 };
 
