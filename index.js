@@ -1162,6 +1162,21 @@ bot.on("callback_query:data", async (ctx) => {
   } else if (session.step === "awaiting_confirmation") {
     if (action === "confirm_payment") {
       console.log("Данные подвердил");
+
+      try {
+        await bot.api.sendMessage(
+          -4574119075,
+          `Заявка на тренировку ТЕСТ
+          ${session.name}, ${session.phone}, ${session.email}`
+        );
+      } catch (error) {
+        console.error(
+          `Не удалось отправить сообщение`,
+          error
+        );
+
+
+
       await ctx.reply("Спасибо! На какую тренировку хотите записаться?", {
         reply_markup: new InlineKeyboard()
           .add({ text: "Групповую", callback_data: "group_training" })
