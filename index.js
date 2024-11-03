@@ -59,7 +59,7 @@ async function createStripePriceAMD(amount, currency, productName) {
   return price.id;
 }
 
-async function generatePaymentLinkForStudio(studio, email) {
+async function generatePaymentLinkFirst(studio, email) {
   const studioInfo = studioDetails[studio];
 
   if (!studioInfo) {
@@ -89,7 +89,7 @@ async function generatePaymentLinkForStudio(studio, email) {
   }
 }
 
-async function generateSecondPaymentLinkForStudio(buy, email) {
+async function generateSecondPaymentLink(buy, email) {
   const actionInfo = actionData[buy];
 
   if (!actionInfo) {
@@ -1173,7 +1173,7 @@ bot.on("callback_query:data", async (ctx) => {
     const str2 = JSON.parse(str);
 
     // Генерация ссылки на оплату и получение paymentId
-    const { paymentLink, paymentId } = await generatePaymentLinkForStudio(
+    const { paymentLink, paymentId } = await generatePaymentLinkFirst(
       session.studio,
       session.email
     );
@@ -1239,10 +1239,8 @@ bot.on("callback_query:data", async (ctx) => {
     console.log("генерирую ссылку для оплаты после нажатия кнопки с тарифом");
     // Генерация ссылки для оплаты
     const actionInfo = actionData[action];
-    console.log(session.studio);
-    console.log(session.email);
-    const { paymentLink, paymentId } = await generateSecondPaymentLinkForStudio(
-      session.studio,
+    const { paymentLink, paymentId } = await generateSecondPaymentLink(
+      action,
       session.email
     );
 
