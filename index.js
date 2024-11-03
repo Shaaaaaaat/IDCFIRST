@@ -361,7 +361,7 @@ const actionData = {
     studio: "ул. Бузанда",
   },
   buy_7000_yvn_gfg: {
-    sum: 7000,
+    sum: 400,
     lessons: 1,
     tag: "YVN_group_GFG",
     currency: "AMD",
