@@ -115,13 +115,22 @@ async function generateSecondPaymentLink(buy, email) {
     );
     const paymentLink = await createStripePaymentLink(priceId, paymentId);
     return { paymentLink, paymentId };
+  } else if (actionInfo.paymentSystem === "stripeEUR") {
+    // Генерация ссылки для Stripe
+    const priceId = await createStripePriceEUR(
+      actionInfo.sum,
+      currency,
+      studio
+    );
+    const paymentLink = await createStripePaymentLink(priceId, paymentId);
+    return { paymentLink, paymentId };
   } else {
     throw new Error("Неизвестная платёжная система");
   }
 }
 
 // Функция для создания цены в Stripe
-async function createStripePrice(amount, currency, productName) {
+async function createStripePriceEUR(amount, currency, productName) {
   const price = await stripe.prices.create({
     unit_amount: amount * 100, // Stripe принимает сумму в минимальных единицах (центах)
     currency: currency.toLowerCase(),
@@ -373,14 +382,14 @@ const actionData = {
     lessons: 12,
     tag: "ds_dasha_eur",
     currency: "EUR",
-    paymentSystem: "stripe",
+    paymentSystem: "stripeEUR",
   },
   buy_249_dsdasha_eur: {
     sum: 249,
     lessons: 36,
     tag: "ds_dasha_eur",
     currency: "EUR",
-    paymentSystem: "stripe",
+    paymentSystem: "stripeEUR",
   },
   buy_60000_yvn_gfg: {
     sum: 60000,
