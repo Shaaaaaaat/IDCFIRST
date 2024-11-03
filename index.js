@@ -107,7 +107,11 @@ async function generateSecondPaymentLink(buy, email) {
     return { paymentLink, paymentId };
   } else if (actionInfo.paymentSystem === "stripeAMD") {
     // Генерация ссылки для Stripe
-    const priceId = await createStripePrice(actionInfo.sum, currency, studio);
+    const priceId = await createStripePriceAMD(
+      actionInfo.sum,
+      currency,
+      studio
+    );
     const paymentLink = await createStripePaymentLink(priceId, paymentId);
     return { paymentLink, paymentId };
   } else {
