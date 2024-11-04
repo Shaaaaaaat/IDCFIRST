@@ -970,6 +970,10 @@ bot.command("start", async (ctx) => {
   console.log(`Ник: ${user.username || "не указан"}`);
   console.log(`Команда /start от пользователя: ${user.id}`);
 
+  // Получаем параметры после /start
+  const args = ctx.message.text.split(" ");
+  const startParam = args[1] || null; // Получаем значение параметра (online/offline)
+
   try {
     await Session.findOneAndUpdate(
       { userId: ctx.from.id.toString() },
@@ -1000,18 +1004,50 @@ bot.command("start", async (ctx) => {
       const session = await Session.findOne({ userId: ctx.from.id.toString() });
       session.airtableId = airtableId; // Сохраняем airtableId в сессии
       await session.save();
-      console.log("Отправил список городов");
-      await ctx.reply(
-        "Привет! Подскажите, пожалуйста, какой город вас интересует?",
-        {
-          reply_markup: new InlineKeyboard()
-            .add({ text: "Москва", callback_data: "city_moscow" })
-            .row()
-            .add({ text: "Санкт-Петербург", callback_data: "city_spb" })
-            .row()
-            .add({ text: "Ереван", callback_data: "city_yerevan" }),
-        }
-      );
+
+      if (startParam === "online") {
+        console.log("Пользователь пришел по URL для online.");
+        // Покажите начальное меню для online
+        await ctx.reply(
+          "Вы выбрали онлайн-тренировки. Подскажите, пожалуйста, какой город вас интересует?",
+          {
+            reply_markup: new InlineKeyboard()
+              .add({ text: "Онлнайе-курс", callback_data: "city_moscow" })
+              .row()
+              .add({ text: "Санкт-Петербург", callback_data: "city_spb" })
+              .row()
+              .add({ text: "Ереван", callback_data: "city_yerevan" }),
+          }
+        );
+      } else if (startParam === "offline") {
+        console.log("Пользователь пришел по URL для offline.");
+        // Покажите начальное меню для offline
+        await ctx.reply(
+          "Привет! Подскажите, пожалуйста, какой город вас интересует?",
+          {
+            reply_markup: new InlineKeyboard()
+              .add({ text: "Москва", callback_data: "city_moscow" })
+              .row()
+              .add({ text: "Санкт-Петербург", callback_data: "city_spb" })
+              .row()
+              .add({ text: "Ереван", callback_data: "city_yerevan" }),
+          }
+        );
+      } else {
+        // Если параметр не указан или не распознан
+        console.log("Параметр не указан или не распознан.");
+        await ctx.reply(
+          "Привет! Подскажите, пожалуйста, какой город вас интересует?",
+          {
+            reply_markup: new InlineKeyboard()
+              .add({ text: "Москва", callback_data: "city_moscow" })
+              .row()
+              .add({ text: "Санкт-Петербург", callback_data: "city_spb" })
+              .row()
+              .add({ text: "Ереван", callback_data: "city_yerevan" }),
+          }
+        );
+      }
     }
   } catch (error) {
     console.error("Произошла ошибка:", error);
