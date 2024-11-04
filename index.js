@@ -1169,8 +1169,8 @@ bot.on("callback_query:data", async (ctx) => {
           `Заявка на тренировку в ${session.studio}\nИмя: ${
             session.name
           }\nТел: ${session.phone}\nEmail: ${session.email}\nНик: ${
-            user.username || "не указан"
-          }]\nID: ${user.id}`
+            ctx.from?.username || "не указан"
+          }]\nID: ${ctx.from?.id}`
         );
       } catch (error) {
         console.error(`Не удалось отправить сообщение`, error);
