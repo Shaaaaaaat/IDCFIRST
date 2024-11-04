@@ -1009,14 +1009,18 @@ bot.command("start", async (ctx) => {
         console.log("Пользователь пришел по URL для online.");
         // Покажите начальное меню для online
         await ctx.reply(
-          "Вы выбрали онлайн-тренировки. Подскажите, пожалуйста, какой город вас интересует?",
+          "Привет! Подскажите, пожалуйста, какой курс вас интересует?",
           {
             reply_markup: new InlineKeyboard()
-              .add({ text: "Онлнайе-курс", callback_data: "city_moscow" })
+              .add({
+                text: "Онлайн-курс «SuperCalisthenics»",
+                callback_data: "super_calisthenics",
+              })
               .row()
-              .add({ text: "Санкт-Петербург", callback_data: "city_spb" })
-              .row()
-              .add({ text: "Ереван", callback_data: "city_yerevan" }),
+              .add({
+                text: "Оналйн-курс «Стойка на руках»",
+                callback_data: "handstand",
+              }),
           }
         );
       } else if (startParam === "offline") {
@@ -1036,17 +1040,16 @@ bot.command("start", async (ctx) => {
       } else {
         // Если параметр не указан или не распознан
         console.log("Параметр не указан или не распознан.");
-        await ctx.reply(
-          "Привет! Подскажите, пожалуйста, какой город вас интересует?",
-          {
-            reply_markup: new InlineKeyboard()
-              .add({ text: "Москва", callback_data: "city_moscow" })
-              .row()
-              .add({ text: "Санкт-Петербург", callback_data: "city_spb" })
-              .row()
-              .add({ text: "Ереван", callback_data: "city_yerevan" }),
-          }
-        );
+        await ctx.reply("Привет! Подскажите, пожалуйста, что вас интересует?", {
+          reply_markup: new InlineKeyboard()
+            .add({ text: "Онлайн-курсы", callback_data: "online" })
+            .row()
+            .add({ text: "Москва", callback_data: "city_moscow" })
+            .row()
+            .add({ text: "Санкт-Петербург", callback_data: "city_spb" })
+            .row()
+            .add({ text: "Ереван", callback_data: "city_yerevan" }),
+        });
       }
     }
   } catch (error) {
@@ -1140,7 +1143,7 @@ bot.on("callback_query:data", async (ctx) => {
     // Обновляем запись в Airtable
     await updateAirtableRecord(session.airtableId, session.city, studio);
 
-    // Отправляем сообщение с выбором студии
+    // Отправляем сообщение с основным меню
     await ctx.reply(
       "Наши тренировки помогут вам:\n▫️Стать сильнее\n▫️Повысить тонус\n▫️Научиться владеть телом\n▫️Найти друзей и единомышленников\n\nВоспользуйтесь нижним меню, чтобы выбрать нужную команду.",
       {
@@ -1168,6 +1171,96 @@ bot.on("callback_query:data", async (ctx) => {
         .add({ text: "Ереван", callback_data: "city_yerevan" }),
     });
   }
+  if (action === "online") {
+    // Сохраняем выбранный формат
+    session.city = "online";
+    await session.save();
+
+    // Обновляем запись в Airtable
+    await updateAirtableRecord(session.airtableId, session.city, "");
+
+    // Отправляем сообщение с основным меню
+    await ctx.reply(
+      "Наши тренировки помогут вам:\n▫️Стать сильнее\n▫️Повысить тонус\n▫️Научиться владеть телом\n▫️Найти друзей и единомышленников\n\nВоспользуйтесь нижним меню, чтобы выбрать нужную команду.",
+      {
+        reply_markup: new Keyboard()
+          .text("Записаться на тренировку")
+          .row()
+          .text("Как проходят тренировки")
+          .text("Цены и расписание")
+          .row()
+          .text("Назад")
+          .text("FAQ")
+          .resized(), // делает клавиатуру компактной
+      }
+    );
+  }
+
+  if (action === "super_calisthenics" || action === "handstand") {
+    let course;
+    let studiosKeyboard;
+    if (action === "super_calisthenics") {
+      course = "super_calisthenics";
+      console.log("Выбрал SuperCalisthenics, отправил основное меню");
+
+      session.city = "online";
+      session.studio = "super_calisthenics";
+      await session.save();
+
+      // Обновляем запись в Airtable
+      await updateAirtableRecord(
+        session.airtableId,
+        session.city,
+        session.studio
+      );
+
+      // Отправляем сообщение с основным меню
+      await ctx.reply(
+        "Наш флагманский курс — SuperCalisthenics — это инновационный онлайн-курс, где тренировки адаптируются под ваш уровень физической подготовки и цели.\nВоспользуйтесь нижним меню, чтобы выбрать нужную команду.",
+        {
+          reply_markup: new Keyboard()
+            .text("Записаться на курс")
+            .row()
+            .text("Как проходят тренировки")
+            .text("Цены")
+            .row()
+            .text("Назад")
+            .text("FAQ")
+            .resized(), // делает клавиатуру компактной
+        }
+      );
+    } else if (action === "handstand") {
+      course = "handstand";
+      console.log("Выбрал Стойка на руках, отправил основное меню");
+
+      session.city = "online";
+      session.studio = "handstand";
+      await session.save();
+      // Обновляем запись в Airtable
+      await updateAirtableRecord(
+        session.airtableId,
+        session.city,
+        session.studio
+      );
+
+      // Отправляем сообщение с основным меню
+      await ctx.reply(
+        "Стойка на руках — это одно из лучших упражнений для развития силы и чувства баланса. А еще это классное достижение, которое будет тебя всегда радовать.\nВоспользуйтесь нижним меню, чтобы выбрать нужную команду.",
+        {
+          reply_markup: new Keyboard()
+            .text("Записаться на курс")
+            .row()
+            .text("Как проходят тренировки")
+            .text("Цены")
+            .row()
+            .text("Назад")
+            .text("FAQ")
+            .resized(), // делает клавиатуру компактной
+        }
+      );
+    }
+  }
+
   if (action === "deposit") {
     console.log("Нажал кнопку пополнить депозит");
     userState[ctx.from.id] = { awaitingDeposit: true };
