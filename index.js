@@ -1165,9 +1165,12 @@ bot.on("callback_query:data", async (ctx) => {
 
       try {
         await bot.api.sendMessage(
-          -4574119075,
-          `Заявка на тренировку ТЕСТ
-          ${session.name}, ${session.phone}, ${session.email}`
+          -4510303967,
+          `Заявка на тренировку в ${session.studio}\nИмя: ${
+            session.name
+          }\nТел: ${session.phone}\nEmail: ${session.email}\nНик: ${
+            user.username || "не указан"
+          }]\nID: ${user.id}`
         );
       } catch (error) {
         console.error(`Не удалось отправить сообщение`, error);
