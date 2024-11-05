@@ -1405,8 +1405,8 @@ bot.on("callback_query:data", async (ctx) => {
     if (action === "russian_card") {
       console.log("Выбрали россискую карту, отправляю тарифы");
       // Получаем данные студии из сессии и telegram_id
-      const studio = session.studio; // Берем студию из сессии
-      if (studio === "super_calithenics") {
+
+      if (session.studio === "super_calithenics") {
         console.log("Отправляю тарифы");
         await ctx.reply("Выберите тариф", {
           reply_markup: new InlineKeyboard()
