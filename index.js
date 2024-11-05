@@ -1459,12 +1459,12 @@ bot.on("callback_query:data", async (ctx) => {
           reply_markup: new InlineKeyboard()
             .add({
               text: "Курс с тренером 5400₽",
-              callback_data: "buy_5400_handstand_ru",
+              callback_data: "buy_5400_handstand_rub",
             })
             .row()
             .add({
               text: "Только видео-уроки 2700₽",
-              callback_data: "buy_2700_handstand_ru",
+              callback_data: "buy_2700_handstand_rub",
             }),
         });
         session.step = "online_buttons";
@@ -1515,7 +1515,6 @@ bot.on("callback_query:data", async (ctx) => {
     console.log("генерирую ссылку для оплаты после нажатия кнопки с тарифом");
     // Генерация ссылки для оплаты
     const actionInfo = actionData[ctx.callbackQuery.data];
-    const action = ctx.callbackQuery.data;
     const { paymentLink, paymentId } = await generateSecondPaymentLink(
       action,
       session.email
