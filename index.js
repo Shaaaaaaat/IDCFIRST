@@ -1462,7 +1462,7 @@ bot.on("callback_query:data", async (ctx) => {
               callback_data: "buy_23400_ds_rub",
             }),
         });
-        session.step = "online_buttoms";
+        session.step = "online_buttons";
         await session.save(); // Сохранение сессии после изменения шага
       }
     } else if (action === "personal_training") {
@@ -1475,10 +1475,10 @@ bot.on("callback_query:data", async (ctx) => {
       session.step = "awaiting_personal_training_details";
       await session.save();
     }
-  } else if (session.step === "online_buttoms") {
+  } else if (session.step === "online_buttons") {
     console.log("генерирую ссылку для оплаты после нажатия кнопки с тарифом");
     // Генерация ссылки для оплаты
-    const actionInfo = actionData[action];
+    const actionInfo = actionData[ctx.callbackQuery.data];
     const { paymentLink, paymentId } = await generateSecondPaymentLink(
       action,
       session.email
