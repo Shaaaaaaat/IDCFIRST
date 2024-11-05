@@ -464,8 +464,24 @@ const actionData = {
     paymentSystem: "robokassa",
     studio: "handstand",
   },
+  buy_2700_handstand_rub: {
+    sum: 2700,
+    lessons: 1,
+    tag: "handstand",
+    currency: "RUB",
+    paymentSystem: "robokassa",
+    studio: "handstand",
+  },
   buy_59_handstand_eur: {
     sum: 59,
+    lessons: 1,
+    tag: "handstand",
+    currency: "EUR",
+    paymentSystem: "stripeEUR",
+    studio: "handstand",
+  },
+  buy_29_handstand_eur: {
+    sum: 29,
     lessons: 1,
     tag: "handstand",
     currency: "EUR",
@@ -1471,6 +1487,22 @@ bot.on("callback_query:data", async (ctx) => {
         });
         session.step = "online_buttons";
         await session.save(); // Сохранение сессии после изменения шага
+      } else if (session.studio === "handstand") {
+        console.log("Отправляю тарифы");
+        await ctx.reply("Выберите подходящий тариф для оплаты:", {
+          reply_markup: new InlineKeyboard()
+            .add({
+              text: "Курс с тренером 5400₽",
+              callback_data: "buy_5400_handstand_ru",
+            })
+            .row()
+            .add({
+              text: "Только видео-уроки 2700₽",
+              callback_data: "buy_2700_handstand_ru",
+            }),
+        });
+        session.step = "online_buttons";
+        await session.save(); // Сохранение сессии после изменения шага
       }
     } else if (action === "foreign_card") {
       console.log("Выбрали зарбужную карту, отправляю тарифы");
@@ -1491,6 +1523,22 @@ bot.on("callback_query:data", async (ctx) => {
             .add({
               text: "36 занятий (249€) - действует 14 недель",
               callback_data: "buy_249_ds_eur",
+            }),
+        });
+        session.step = "online_buttons";
+        await session.save(); // Сохранение сессии после изменения шага
+      } else if (session.studio === "handstand") {
+        console.log("Отправляю тарифы");
+        await ctx.reply("Выберите подходящий тариф для оплаты:", {
+          reply_markup: new InlineKeyboard()
+            .add({
+              text: "Курс с тренером 59€",
+              callback_data: "buy_59_handstand_eur",
+            })
+            .row()
+            .add({
+              text: "Только видео-уроки 29€",
+              callback_data: "buy_29_handstand_eur",
             }),
         });
         session.step = "online_buttons";
