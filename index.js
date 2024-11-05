@@ -1402,33 +1402,31 @@ bot.on("callback_query:data", async (ctx) => {
       await session.save();
     }
   } else if (session.step === "awaiting_card_type") {
-    if (action === "russian_card") {
+    if (action === "russian_card" && session.studio === "super_calithenics") {
       console.log("Выбрали россискую карту, отправляю тарифы");
       // Получаем данные студии из сессии и telegram_id
 
-      if (session.studio === "super_calithenics") {
-        console.log("Отправляю тарифы");
-        await ctx.reply("Выберите тариф", {
-          reply_markup: new InlineKeyboard()
-            .add({
-              text: "Пробное (тест-силы) 950₽ - действует 4 недели",
-              callback_data: "buy_950_powertest_ru",
-            })
-            .row()
-            .add({
-              text: "12 занятий (9600₽) - действует 6 недель",
-              callback_data: "buy_9600_ds_rub",
-            })
-            .row()
-            .add({
-              text: "36 занятий (23400₽) - действует 14 недель",
-              callback_data: "buy_23400_ds_rub",
-            }),
-        });
-        session.step = "awaiting_training_type";
-        await session.save(); // Сохранение сессии после изменения шага
-      }
-    } else if (action === "personal_training") {
+      console.log("Отправляю тарифы");
+      await ctx.reply("Выберите тариф", {
+        reply_markup: new InlineKeyboard()
+          .add({
+            text: "Пробное (тест-силы) 950₽ - действует 4 недели",
+            callback_data: "buy_950_powertest_ru",
+          })
+          .row()
+          .add({
+            text: "12 занятий (9600₽) - действует 6 недель",
+            callback_data: "buy_9600_ds_rub",
+          })
+          .row()
+          .add({
+            text: "36 занятий (23400₽) - действует 14 недель",
+            callback_data: "buy_23400_ds_rub",
+          }),
+      });
+      session.step = "awaiting_training_type";
+      await session.save(); // Сохранение сессии после изменения шага
+    } else if (action === "russian_card" && session.studio === "handstand") {
       console.log("Выбрал персональные тренировки, отправляю сообщение");
       // Персональная тренировка - показываем персональное меню
       await ctx.reply(
