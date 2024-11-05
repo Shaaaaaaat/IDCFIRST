@@ -101,6 +101,7 @@ async function generateSecondPaymentLink(buy, email) {
   const currency = actionInfo.currency;
   const studio = actionInfo.studio;
   const e = email;
+  const ds = "online";
 
   if (actionInfo.paymentSystem === "robokassa") {
     // Генерация ссылки для Robokassa
@@ -115,13 +116,18 @@ async function generateSecondPaymentLink(buy, email) {
     );
     const paymentLink = await createStripePaymentLink(priceId, paymentId);
     return { paymentLink, paymentId };
+  } else if (actionInfo.paymentSystem === "stripeEUR") {
+    // Генерация ссылки для Stripe
+    const priceId = await createStripePriceEUR(actionInfo.sum, currency, ds);
+    const paymentLink = await createStripePaymentLink(priceId, paymentId);
+    return { paymentLink, paymentId };
   } else {
     throw new Error("Неизвестная платёжная система");
   }
 }
 
 // Функция для создания цены в Stripe
-async function createStripePrice(amount, currency, productName) {
+async function createStripePriceEUR(amount, currency, productName) {
   const price = await stripe.prices.create({
     unit_amount: amount * 100, // Stripe принимает сумму в минимальных единицах (центах)
     currency: currency.toLowerCase(),
@@ -347,11 +353,41 @@ const actionData = {
     currency: "RUB",
     paymentSystem: "robokassa",
   },
-  buy_1100_dsdasha_rub: { sum: 1100, lessons: 1, tag: "ds_dasha_rub" },
-  buy_9600_dsdasha_rub: { sum: 9600, lessons: 12, tag: "ds_dasha_rub" },
-  buy_23400_dsdasha_rub: { sum: 23400, lessons: 36, tag: "ds_dasha_rub" },
-  buy_105_dsdasha_eur: { sum: 105, lessons: 12, tag: "ds_dasha_eur" },
-  buy_249_dsdasha_eur: { sum: 249, lessons: 36, tag: "ds_dasha_eur" },
+  buy_1100_ds_rub: {
+    sum: 1100,
+    lessons: 1,
+    tag: "ds_rub",
+    currency: "RUB",
+    paymentSystem: "robokassa",
+  },
+  buy_9600_ds_rub: {
+    sum: 9600,
+    lessons: 12,
+    tag: "ds_rub",
+    currency: "RUB",
+    paymentSystem: "robokassa",
+  },
+  buy_23400_ds_rub: {
+    sum: 23400,
+    lessons: 36,
+    tag: "ds_rub",
+    currency: "RUB",
+    paymentSystem: "robokassa",
+  },
+  buy_105_ds_eur: {
+    sum: 105,
+    lessons: 12,
+    tag: "ds_eur",
+    currency: "EUR",
+    paymentSystem: "stripeEUR",
+  },
+  buy_249_ds_eur: {
+    sum: 249,
+    lessons: 36,
+    tag: "ds_eur",
+    currency: "EUR",
+    paymentSystem: "stripeEUR",
+  },
   buy_60000_yvn_gfg: {
     sum: 60000,
     lessons: 12,
@@ -553,28 +589,28 @@ const buttonsData = {
     ],
   },
   ds: {
-    RUBDASHA: [
+    RUB: [
       {
         text: "1 занятие (1 100₽) — действует 4 недели",
-        callback_data: "buy_1100_dsdasha_rub",
+        callback_data: "buy_1100_ds_rub",
       },
       {
         text: "12 занятий (9 600₽) — действует 6 недель",
-        callback_data: "buy_9600_dsdasha_rub",
+        callback_data: "buy_9600_ds_rub",
       },
       {
         text: "36 занятий (23 400₽) — действует 14 недель",
-        callback_data: "buy_23400_dsdasha_rub",
+        callback_data: "buy_23400_ds_rub",
       },
     ],
-    EURDASHA: [
+    EUR: [
       {
         text: "12 занятий (105€) — действует 6 недель",
-        callback_data: "buy_105_dsdasha_eur",
+        callback_data: "buy_105_ds_eur",
       },
       {
         text: "36 занятий (249€) — действует 14 недель",
-        callback_data: "buy_249_dsdasha_eur",
+        callback_data: "buy_249_ds_eur",
       },
     ],
   },
@@ -674,10 +710,10 @@ function generateKeyboard(tag) {
   let keyboard = new InlineKeyboard();
   console.log("Отправляю кнопки для оплаты");
 
-  if (tag === "ds_dasha_rub") {
-    buttonsData.ds.RUBDASHA.forEach((button) => keyboard.add(button).row());
-  } else if (tag === "ds_dasha_eur") {
-    buttonsData.ds.EURDASHA.forEach((button) => keyboard.add(button).row());
+  if (tag === "ds_rub") {
+    buttonsData.ds.RUB.forEach((button) => keyboard.add(button).row());
+  } else if (tag === "ds_eur") {
+    buttonsData.ds.EUR.forEach((button) => keyboard.add(button).row());
   } else if (tag === "MSC_group_YCG") {
     buttonsData.group.MSCYCG.forEach((button) => keyboard.add(button).row());
   } else if (tag === "SPB_group_SPI") {
@@ -694,8 +730,6 @@ function generateKeyboard(tag) {
     buttonsData.personal.SPBRTC.forEach((button) => keyboard.add(button).row());
   } else if (tag === "SPB_personal_HKC") {
     buttonsData.personal.SPBHKC.forEach((button) => keyboard.add(button).row());
-  } else if (tag === "ds") {
-    buttonsData.ds.forEach((button) => keyboard.add(button).row());
   } else if (tag === "YVN_group_GFG") {
     buttonsData.group.YVNGFG.forEach((button) => keyboard.add(button).row());
   } else if (tag === "YVN_personal_GFG") {
@@ -1128,6 +1162,20 @@ bot.on("callback_query:data", async (ctx) => {
   } else if (session.step === "awaiting_confirmation") {
     if (action === "confirm_payment") {
       console.log("Данные подвердил");
+
+      try {
+        await bot.api.sendMessage(
+          -4510303967,
+          `Заявка на тренировку в ${session.studio}\nИмя: ${
+            session.name
+          }\nТел: ${session.phone}\nEmail: ${session.email}\nНик: ${
+            ctx.from?.username || "не указан"
+          }]\nID: ${ctx.from?.id}`
+        );
+      } catch (error) {
+        console.error(`Не удалось отправить сообщение`, error);
+      }
+
       await ctx.reply("Спасибо! На какую тренировку хотите записаться?", {
         reply_markup: new InlineKeyboard()
           .add({ text: "Групповую", callback_data: "group_training" })
@@ -1474,8 +1522,8 @@ bot.on("message:text", async (ctx) => {
     const userInfo = await getUserInfo(tgId);
     console.log("нажал купить онлайн тренировки");
 
-    if (userInfo.tag === "ds_dasha_eur") {
-      const keyboard = generateKeyboard(userInfo.tag);
+    if (userInfo.tag.includes("ds") && userInfo.tag.includes("rub")) {
+      const keyboard = generateKeyboard("ds_rub");
       if (keyboard) {
         await ctx.reply("Выберите тариф:", {
           reply_markup: keyboard,
@@ -1485,9 +1533,8 @@ bot.on("message:text", async (ctx) => {
           "Ваш тег не распознан. Пожалуйста, обратитесь к поддержке @IDC_Manager."
         );
       }
-    } else if (!userInfo.tag.includes("ds_dasha_eur")) {
-      const newString = userInfo.tag.replace(userInfo.tag, "ds_dasha_rub");
-      const keyboard = generateKeyboard(newString);
+    } else if (userInfo.tag.includes("ds") && userInfo.tag.includes("eur")) {
+      const keyboard = generateKeyboard("ds_eur");
       if (keyboard) {
         await ctx.reply("Выберите тариф:", {
           reply_markup: keyboard,

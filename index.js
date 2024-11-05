@@ -9,7 +9,6 @@ const axios = require("axios");
 const connectDB = require("./database");
 const Session = require("./sessionModel");
 
-const userState = {};
 // Логируем запуск приложения с информацией о пользователе
 console.log("Приложение запущено");
 
@@ -420,6 +419,30 @@ const actionData = {
     paymentSystem: "stripeAMD",
     studio: "ул. Бузанда",
   },
+  buy_5400_handstand_rub: {
+    sum: 5400,
+    lessons: 1,
+    tag: "handstand",
+    currency: "RUB",
+    paymentSystem: "robokassa",
+    studio: "handstand",
+  },
+  buy_59_handstand_eur: {
+    sum: 59,
+    lessons: 1,
+    tag: "handstand",
+    currency: "EUR",
+    paymentSystem: "stripeEUR",
+    studio: "handstand",
+  },
+  buy_950_powertest_ru: {
+    sum: 950,
+    lessons: 1,
+    tag: "super_calisthenics",
+    currency: "RUB",
+    paymentSystem: "robokassa",
+    studio: "super_calisthenics",
+  },
 };
 
 // Объект с данными для различных типов кнопок
@@ -642,10 +665,22 @@ const studioDetails = {
     paymentSystem: "robokassa",
   },
   "ул. Бузанда": {
-    price: 500,
+    price: 5000,
     currency: "AMD",
     tag: "01YVN_group_GFG_start",
     paymentSystem: "stripeAMD", // Использовать Stripe для Еревана
+  },
+  handstand_ru: {
+    price: 5400,
+    currency: "RUB",
+    tag: "handstand",
+    paymentSystem: "robokassa",
+  },
+  handstand_eur: {
+    price: 54,
+    currency: "EUR",
+    tag: "handstand",
+    paymentSystem: "stripeEUR",
   },
 };
 
@@ -662,6 +697,8 @@ function getPriceAndSchedule(studio) {
       "Адрес студии м. Московские Ворота.:\nУл. Заставская, 33П\n\n🔻 Расписание занятий:\nВторник 20:40\nЧетверг 20:40\nСуббота 14:00\n\n🔻 Стоимость тренировок:\n👉🏻Пробное - 950₽ (действует 4 недели)\n👉🏻12 занятий - 9600₽ (действует 4 недели)\n👉🏻12 занятий - 11400₽ (действует 6 недель)\n👉🏻1 занятие - 1100₽ (действует 4 недели)\n\n🔻 Цены индивидуальных тренировок:\n1 тренировка (1 чел.) - 3600₽ за занятие\n1 тренировка (2 чел.) - 5000₽ за занятие\n1 тренировка (3 чел.) - 6000₽ за занятие",
     "ул. Бузанда":
       "Адрес студии на ул. Бузанда.:\nУл. Павстоса Бузанда, 1/3\n\n🔻 Расписание занятий:\nПонедельник 08:30 (утро) \nСреда 08:30 (утро) \nПятница 08:30 (утро) \n\n🔻 Стоимость тренировок:\n👉🏻Пробное - 5000դր. (действует 4 недели)\n👉🏻12 занятий - 60000դր. (действует 6 недель)\n👉🏻1 занятие - 7000դր. (действует 4 недели)\n\n🔻 Цены индивидуальных тренировок:\n1 тренировка (1 чел.) - 12500դր. за занятие\n1 тренировка (2 чел.) - 17000դր. за занятие\n1 тренировка (3 чел.) - 21000դր. за занятие",
+    super_calisthenics:
+      "Стоимость тренировок:\n12 занятий (доступ 6 недель): 👉🏻 9600₽ (800₽ / за занятие)\n36 занятий (доступ 14 недель):👉🏻 23400₽ (650₽ / за занятие)\nНе уверены, подойдет ли наш формат? Пройдите тест-силы отдельно: 👉🏻  950₽",
   };
 
   return (
@@ -1180,25 +1217,22 @@ bot.on("callback_query:data", async (ctx) => {
     await updateAirtableRecord(session.airtableId, session.city, "");
 
     // Отправляем сообщение с основным меню
-    await ctx.reply(
-      "Наши тренировки помогут вам:\n▫️Стать сильнее\n▫️Повысить тонус\n▫️Научиться владеть телом\n▫️Найти друзей и единомышленников\n\nВоспользуйтесь нижним меню, чтобы выбрать нужную команду.",
-      {
-        reply_markup: new Keyboard()
-          .text("Записаться на тренировку")
-          .row()
-          .text("Как проходят тренировки")
-          .text("Цены и расписание")
-          .row()
-          .text("Назад")
-          .text("FAQ")
-          .resized(), // делает клавиатуру компактной
-      }
-    );
+    await ctx.reply("Выберите, пожалуйста, курс:", {
+      reply_markup: new InlineKeyboard()
+        .add({
+          text: "Онлайн-курс «SuperCalisthenics»",
+          callback_data: "super_calisthenics",
+        })
+        .row()
+        .add({
+          text: "Оналйн-курс «Стойка на руках»",
+          callback_data: "handstand",
+        }),
+    });
   }
 
   if (action === "super_calisthenics" || action === "handstand") {
     let course;
-    let studiosKeyboard;
     if (action === "super_calisthenics") {
       course = "super_calisthenics";
       console.log("Выбрал SuperCalisthenics, отправил основное меню");
@@ -1221,11 +1255,11 @@ bot.on("callback_query:data", async (ctx) => {
           reply_markup: new Keyboard()
             .text("Записаться на курс")
             .row()
-            .text("Как проходят тренировки")
+            .text("Как проходят занятия")
             .text("Цены")
             .row()
-            .text("Назад")
-            .text("FAQ")
+            .text("Назад ⬅️")
+            .text("FAQ❓")
             .resized(), // делает клавиатуру компактной
         }
       );
@@ -1250,11 +1284,11 @@ bot.on("callback_query:data", async (ctx) => {
           reply_markup: new Keyboard()
             .text("Записаться на курс")
             .row()
-            .text("Как проходят тренировки")
-            .text("Цены")
+            .text("Про курс")
+            .text("Стоиомсть курса")
             .row()
-            .text("Назад")
-            .text("FAQ")
+            .text("Назад ⬅️")
+            .text("FAQ❓")
             .resized(), // делает клавиатуру компактной
         }
       );
@@ -1263,7 +1297,7 @@ bot.on("callback_query:data", async (ctx) => {
 
   if (action === "deposit") {
     console.log("Нажал кнопку пополнить депозит");
-    userState[ctx.from.id] = { awaitingDeposit: true };
+    session.userState = { awaitingDeposit: true };
     await ctx.reply("Введите сумму депозита:");
     await ctx.answerCallbackQuery();
     return;
@@ -1305,15 +1339,34 @@ bot.on("callback_query:data", async (ctx) => {
         console.error(`Не удалось отправить сообщение`, error);
       }
 
-      await ctx.reply("Спасибо! На какую тренировку хотите записаться?", {
-        reply_markup: new InlineKeyboard()
-          .add({ text: "Групповую", callback_data: "group_training" })
-          .row()
-          .add({
-            text: "Персональную (или сплит)",
-            callback_data: "personal_training",
-          }),
-      });
+      if (session.studio === "super_calisthenics") {
+        await ctx.reply(
+          "Спасибо! Подскажите, пожалуйста, какой картой вам будет удобнее оплатить курс?",
+          {
+            reply_markup: new InlineKeyboard()
+              .add({ text: "Российской картой", callback_data: "russian_card" })
+              .row()
+              .add({
+                text: "Зарубежной картой",
+                callback_data: "foreign_card",
+              }),
+          }
+        );
+        session.step = "awaiting_card_type";
+        await session.save(); // Сохранение сессии после изменения шага
+      } else {
+        await ctx.reply("Спасибо! На какую тренировку хотите записаться?", {
+          reply_markup: new InlineKeyboard()
+            .add({ text: "Групповую", callback_data: "group_training" })
+            .row()
+            .add({
+              text: "Персональную (или сплит)",
+              callback_data: "personal_training",
+            }),
+        });
+        session.step = "awaiting_training_type";
+        await session.save(); // Сохранение сессии после изменения шага
+      }
 
       // Отправляем данные в Airtable
       await sendToAirtable(
@@ -1324,9 +1377,6 @@ bot.on("callback_query:data", async (ctx) => {
         session.city, // Город пользователя
         session.studio // Студия пользователя
       );
-
-      session.step = "awaiting_training_type";
-      await session.save(); // Сохранение сессии после изменения шага
     }
   } else if (session.step === "awaiting_training_type") {
     if (action === "group_training") {
@@ -1341,6 +1391,42 @@ bot.on("callback_query:data", async (ctx) => {
       // Сохраняем шаг, если нужно
       session.step = "awaiting_next_step";
       await session.save();
+    } else if (action === "personal_training") {
+      console.log("Выбрал персональные тренировки, отправляю сообщение");
+      // Персональная тренировка - показываем персональное меню
+      await ctx.reply(
+        "Напишите, пожалуйста, в какой день и время вам удобно тренироваться (лучше указать диапазон) и сколько человек будет  — я согласую занятие с тренером и вернусь к вам как можно скорее."
+      );
+
+      session.step = "awaiting_personal_training_details";
+      await session.save();
+    }
+  } else if (session.step === "awaiting_card_type") {
+    if (action === "russian_card") {
+      console.log("Выбрали россискую карту, отправляю тарифы");
+      // Получаем данные студии из сессии и telegram_id
+      const studio = session.studio; // Берем студию из сессии
+      if (studio === "super_calithenics") {
+        await ctx.reply("Выберите тариф", {
+          reply_markup: new InlineKeyboard()
+            .add({
+              text: "Пробное (тест-силы) 950₽ - действует 4 недели",
+              callback_data: "buy_950_powertest_ru",
+            })
+            .row()
+            .add({
+              text: "12 занятий (9600₽) - действует 6 недель",
+              callback_data: "buy_9600_ds_rub",
+            })
+            .row()
+            .add({
+              text: "36 занятий (23400₽) - действует 14 недель",
+              callback_data: "buy_23400_ds_rub",
+            }),
+        });
+        session.step = "awaiting_training_type";
+        await session.save(); // Сохранение сессии после изменения шага
+      }
     } else if (action === "personal_training") {
       console.log("Выбрал персональные тренировки, отправляю сообщение");
       // Персональная тренировка - показываем персональное меню
@@ -1456,7 +1542,7 @@ bot.on("message:text", async (ctx) => {
   const userMessage = ctx.message.text;
   const tgId = ctx.from.id;
 
-  if (userState[tgId] && userState[tgId].awaitingDeposit) {
+  if (session.userState && session.userState.awaitingDeposit) {
     const text = ctx.message.text.trim().toLowerCase();
     const sum = parseFloat(text);
     if (isNaN(sum) || sum <= 0) {
@@ -1486,7 +1572,7 @@ bot.on("message:text", async (ctx) => {
     );
 
     // Сбрасываем состояние пользователя
-    delete userState[tgId];
+    delete session.userState;
     return;
   }
   // Проверка на ожидаемый ответ о времени тренировки
@@ -1699,6 +1785,10 @@ bot.on("message:text", async (ctx) => {
     );
   } else if (userMessage === "Цены и расписание") {
     console.log("Нажал на кнопку - Цены и расписание");
+    const priceAndSchedule = getPriceAndSchedule(session.studio);
+    await ctx.reply(priceAndSchedule);
+  } else if (userMessage === "Цены") {
+    console.log("Нажал на кнопку - Цены");
     const priceAndSchedule = getPriceAndSchedule(session.studio);
     await ctx.reply(priceAndSchedule);
   } else if (userMessage === "Назад") {
