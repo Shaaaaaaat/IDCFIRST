@@ -1331,9 +1331,9 @@ bot.on("callback_query:data", async (ctx) => {
           -4510303967,
           `Заявка на тренировку в ${session.studio}\nИмя: ${
             session.name
-          }\nТел: ${session.phone}\nEmail: ${session.email}\nНик: ${
+          }\nТел: ${session.phone}\nEmail: ${session.email}\nНик: @${
             ctx.from?.username || "не указан"
-          }]\nID: ${ctx.from?.id}`
+          }\nID: ${ctx.from?.id}`
         );
       } catch (error) {
         console.error(`Не удалось отправить сообщение`, error);
@@ -1407,6 +1407,7 @@ bot.on("callback_query:data", async (ctx) => {
       // Получаем данные студии из сессии и telegram_id
       const studio = session.studio; // Берем студию из сессии
       if (studio === "super_calithenics") {
+        console.log("Отправляю тарифы");
         await ctx.reply("Выберите тариф", {
           reply_markup: new InlineKeyboard()
             .add({
