@@ -1462,7 +1462,7 @@ bot.on("callback_query:data", async (ctx) => {
               callback_data: "buy_23400_ds_rub",
             }),
         });
-        session.step = "awaiting_training_type";
+        session.step = "online_buttoms";
         await session.save(); // Сохранение сессии после изменения шага
       }
     } else if (action === "personal_training") {
@@ -1475,6 +1475,25 @@ bot.on("callback_query:data", async (ctx) => {
       session.step = "awaiting_personal_training_details";
       await session.save();
     }
+  } else if (session.step === "online_buttoms") {
+    console.log("генерирую ссылку для оплаты после нажатия кнопки с тарифом");
+    // Генерация ссылки для оплаты
+    const actionInfo = actionData[action];
+    const { paymentLink, paymentId } = await generateSecondPaymentLink(
+      action,
+      session.email
+    );
+
+    // Отправляем пользователю ссылку на оплату
+    await ctx.reply(`Для оплаты перейдите по ссылке: ${paymentLink}`);
+
+    await thirdTwoToAirtable(
+      ctx.from.id,
+      paymentId,
+      actionInfo.sum,
+      actionInfo.lessons,
+      actionInfo.tag
+    );
   } else if (action.startsWith("day")) {
     console.log("Выбрал дату групповой тренировки");
     const buttonText = action.split(",")[1];
