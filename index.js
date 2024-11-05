@@ -1399,7 +1399,10 @@ bot.on("callback_query:data", async (ctx) => {
         console.error(`Не удалось отправить сообщение`, error);
       }
 
-      if (session.studio === "super_calisthenics") {
+      if (
+        session.studio === "super_calisthenics" ||
+        session.studio === "handstand"
+      ) {
         await ctx.reply(
           "Спасибо! Какой картой вам будет удобнее оплатить курс?",
           {
