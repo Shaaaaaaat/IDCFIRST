@@ -480,6 +480,13 @@ const actionData = {
     paymentSystem: "robokassa",
     studio: "super_calisthenics",
   },
+  buy_10_powertest_eur: {
+    sum: 10,
+    lessons: 1,
+    tag: "ds_eur",
+    currency: "EUR",
+    paymentSystem: "stripeEUR",
+  },
 };
 
 // Объект с данными для различных типов кнопок
@@ -1465,15 +1472,30 @@ bot.on("callback_query:data", async (ctx) => {
         session.step = "online_buttons";
         await session.save(); // Сохранение сессии после изменения шага
       }
-    } else if (action === "personal_training") {
-      console.log("Выбрал персональные тренировки, отправляю сообщение");
-      // Персональная тренировка - показываем персональное меню
-      await ctx.reply(
-        "Напишите, пожалуйста, в какой день и время вам удобно тренироваться (лучше указать диапазон) и сколько человек будет  — я согласую занятие с тренером и вернусь к вам как можно скорее."
-      );
-
-      session.step = "awaiting_personal_training_details";
-      await session.save();
+    } else if (action === "foreign_card") {
+      console.log("Выбрали зарбужную карту, отправляю тарифы");
+      if (session.studio === "super_calisthenics") {
+        console.log("Отправляю тарифы");
+        await ctx.reply("Выберите подходящий тариф для оплаты:", {
+          reply_markup: new InlineKeyboard()
+            .add({
+              text: "Пробное (тест-силы) 10€ - действует 4 недели",
+              callback_data: "buy_10_powertest_eur",
+            })
+            .row()
+            .add({
+              text: "12 занятий (105€) - действует 6 недель",
+              callback_data: "buy_105_ds_eur",
+            })
+            .row()
+            .add({
+              text: "36 занятий (249€) - действует 14 недель",
+              callback_data: "buy_249_ds_eur",
+            }),
+        });
+        session.step = "online_buttons";
+        await session.save(); // Сохранение сессии после изменения шага
+      }
     }
   } else if (session.step === "online_buttons") {
     console.log("генерирую ссылку для оплаты после нажатия кнопки с тарифом");
