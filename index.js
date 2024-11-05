@@ -1341,7 +1341,7 @@ bot.on("callback_query:data", async (ctx) => {
 
       if (session.studio === "super_calisthenics") {
         await ctx.reply(
-          "Спасибо! Подскажите, пожалуйста, какой картой вам будет удобнее оплатить курс?",
+          "Спасибо! Какой картой вам будет удобнее оплатить курс?",
           {
             reply_markup: new InlineKeyboard()
               .add({ text: "Российской картой", callback_data: "russian_card" })
@@ -1408,7 +1408,7 @@ bot.on("callback_query:data", async (ctx) => {
 
       if (session.studio === "super_calisthenics") {
         console.log("Отправляю тарифы");
-        await ctx.reply("Выберите тариф", {
+        await ctx.reply("Выберите подходящий тариф для оплаты:", {
           reply_markup: new InlineKeyboard()
             .add({
               text: "Пробное (тест-силы) 950₽ - действует 4 недели",
