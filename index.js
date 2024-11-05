@@ -124,6 +124,43 @@ async function generateSecondPaymentLink(buy, email) {
     throw new Error("Неизвестная платёжная система");
   }
 }
+// оплата онлан
+async function generateOnlinePaymentLink(buy, email) {
+  const actionInfo = actionData[buy];
+
+  if (!actionInfo) {
+    throw new Error("Информация не найдена");
+  }
+
+  const paymentId = generateUniqueId(); // Генерируем уникальный ID для платежа
+  const sum = actionInfo.sum;
+  const currency = actionInfo.currency;
+  const studio = actionInfo.studio;
+  const e = email;
+  const ds = "online";
+
+  if (actionInfo.paymentSystem === "robokassa") {
+    // Генерация ссылки для Robokassa
+    const paymentLink = generatePaymentLink(paymentId, sum, e);
+    return { paymentLink, paymentId };
+  } else if (actionInfo.paymentSystem === "stripeAMD") {
+    // Генерация ссылки для Stripe
+    const priceId = await createStripePriceAMD(
+      actionInfo.sum,
+      currency,
+      studio
+    );
+    const paymentLink = await createStripePaymentLink(priceId, paymentId);
+    return { paymentLink, paymentId };
+  } else if (actionInfo.paymentSystem === "stripeEUR") {
+    // Генерация ссылки для Stripe
+    const priceId = await createStripePriceEUR(actionInfo.sum, currency, ds);
+    const paymentLink = await createStripePaymentLink(priceId, paymentId);
+    return { paymentLink, paymentId };
+  } else {
+    throw new Error("Неизвестная платёжная система");
+  }
+}
 
 // Функция для создания цены в Stripe
 async function createStripePriceEUR(amount, currency, productName) {
