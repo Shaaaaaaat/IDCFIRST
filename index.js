@@ -1028,9 +1028,7 @@ app.use(bodyParser.json()); // Используем JSON для обработк
 // Обработчик команд бота
 bot.command("start", async (ctx) => {
   // Удаление текущего стационарного меню
-  await ctx.reply("", {
-    reply_markup: { remove_keyboard: true }, // Удаление старого меню
-  });
+  await ctx.deleteChatReplyMarkup();
   const user = ctx.from;
   console.log("Новый запуск от пользователя:");
   console.log(`ID: ${user.id}`);
