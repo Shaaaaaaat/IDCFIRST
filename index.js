@@ -457,10 +457,10 @@ const actionData = {
   buy_950_powertest_ru: {
     sum: 1,
     lessons: 1,
-    tag: "super_calisthenics",
+    tag: "super_calisthenics_start",
     currency: "RUB",
     paymentSystem: "robokassa",
-    studio: "super_calisthenics_start",
+    studio: "super_calisthenics",
   },
   buy_10_powertest_eur: {
     sum: 10,
