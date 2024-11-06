@@ -423,7 +423,7 @@ const actionData = {
     studio: "ул. Бузанда",
   },
   buy_5400_handstand_rub: {
-    sum: 54,
+    sum: 5400,
     lessons: 1,
     tag: "handstand",
     currency: "RUB",
@@ -439,7 +439,7 @@ const actionData = {
     studio: "handstand",
   },
   buy_59_handstand_eur: {
-    sum: 1,
+    sum: 59,
     lessons: 1,
     tag: "handstand",
     currency: "EUR",
@@ -455,7 +455,7 @@ const actionData = {
     studio: "handstand",
   },
   buy_950_powertest_ru: {
-    sum: 1,
+    sum: 950,
     lessons: 1,
     tag: "super_calisthenics_start",
     currency: "RUB",
@@ -1052,71 +1052,71 @@ bot.command("start", async (ctx) => {
 
     const tgId = ctx.from.id; // Сохранение tgId пользователя
     // Проверка наличия пользователя в Airtable
-    const userExists = await checkUserInAirtable(tgId);
+    // const userExists = await checkUserInAirtable(tgId);
 
-    if (userExists) {
-      // Если пользователь уже есть в базе, выполняем сценарий для существующих пользователей
-      console.log("Пользователь есть в базе Clients");
-      await handleExistingUserScenario(ctx);
-    } else {
-      console.log("Пользователя нет в базе Clients");
-      // Сохраняем идентификатор записи в сессии
-      const airtableId = await sendFirstAirtable(
-        ctx.from.id,
-        fullName,
-        ctx.from.username
-      );
-      const session = await Session.findOne({ userId: ctx.from.id.toString() });
-      session.airtableId = airtableId; // Сохраняем airtableId в сессии
-      await session.save();
+    // if (userExists) {
+    //   // Если пользователь уже есть в базе, выполняем сценарий для существующих пользователей
+    //   console.log("Пользователь есть в базе Clients");
+    //   await handleExistingUserScenario(ctx);
+    // } else {
+    console.log("Пользователя нет в базе Clients");
+    // Сохраняем идентификатор записи в сессии
+    const airtableId = await sendFirstAirtable(
+      ctx.from.id,
+      fullName,
+      ctx.from.username
+    );
+    const session = await Session.findOne({ userId: ctx.from.id.toString() });
+    session.airtableId = airtableId; // Сохраняем airtableId в сессии
+    await session.save();
 
-      if (startParam === "online") {
-        console.log("Пользователь пришел по URL для online.");
-        // Покажите начальное меню для online
-        await ctx.reply(
-          "Привет! Подскажите, пожалуйста, какой курс вас интересует?",
-          {
-            reply_markup: new InlineKeyboard()
-              .add({
-                text: "Онлайн-курс «SuperCalisthenics»",
-                callback_data: "super_calisthenics",
-              })
-              .row()
-              .add({
-                text: "Оналйн-курс «Стойка на руках»",
-                callback_data: "handstand",
-              }),
-          }
-        );
-      } else if (startParam === "offline") {
-        console.log("Пользователь пришел по URL для offline.");
-        // Покажите начальное меню для offline
-        await ctx.reply(
-          "Привет! Подскажите, пожалуйста, какой город вас интересует?",
-          {
-            reply_markup: new InlineKeyboard()
-              .add({ text: "Москва", callback_data: "city_moscow" })
-              .row()
-              .add({ text: "Санкт-Петербург", callback_data: "city_spb" })
-              .row()
-              .add({ text: "Ереван", callback_data: "city_yerevan" }),
-          }
-        );
-      } else {
-        // Если параметр не указан или не распознан
-        console.log("Параметр не указан или не распознан.");
-        await ctx.reply("Привет! Подскажите, пожалуйста, что вас интересует?", {
+    if (startParam === "online") {
+      console.log("Пользователь пришел по URL для online.");
+      // Покажите начальное меню для online
+      await ctx.reply(
+        "Привет! Подскажите, пожалуйста, какой курс вас интересует?",
+        {
           reply_markup: new InlineKeyboard()
-            .add({ text: "Онлайн-курсы", callback_data: "online" })
+            .add({
+              text: "Онлайн-курс «SuperCalisthenics»",
+              callback_data: "super_calisthenics",
+            })
             .row()
+            .add({
+              text: "Оналйн-курс «Стойка на руках»",
+              callback_data: "handstand",
+            }),
+        }
+      );
+    } else if (startParam === "offline") {
+      console.log("Пользователь пришел по URL для offline.");
+      // Покажите начальное меню для offline
+      await ctx.reply(
+        "Привет! Подскажите, пожалуйста, какой город вас интересует?",
+        {
+          reply_markup: new InlineKeyboard()
             .add({ text: "Москва", callback_data: "city_moscow" })
             .row()
             .add({ text: "Санкт-Петербург", callback_data: "city_spb" })
             .row()
             .add({ text: "Ереван", callback_data: "city_yerevan" }),
-        });
-      }
+        }
+      );
+    } else {
+      // Если параметр не указан или не распознан
+      console.log("Параметр не указан или не распознан.");
+      await ctx.reply("Привет! Подскажите, пожалуйста, что вас интересует?", {
+        reply_markup: new InlineKeyboard()
+          .add({ text: "Онлайн-курсы", callback_data: "online" })
+          .row()
+          .add({ text: "Москва", callback_data: "city_moscow" })
+          .row()
+          .add({ text: "Санкт-Петербург", callback_data: "city_spb" })
+          .row()
+          .add({ text: "Ереван", callback_data: "city_yerevan" }),
+      });
     }
+    // }
   } catch (error) {
     console.error("Произошла ошибка:", error);
   }

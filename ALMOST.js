@@ -9,7 +9,6 @@ const axios = require("axios");
 const connectDB = require("./database");
 const Session = require("./sessionModel");
 
-const userState = {};
 // Логируем запуск приложения с информацией о пользователе
 console.log("Приложение запущено");
 
@@ -101,7 +100,6 @@ async function generateSecondPaymentLink(buy, email) {
   const currency = actionInfo.currency;
   const studio = actionInfo.studio;
   const e = email;
-  const ds = "online";
 
   if (actionInfo.paymentSystem === "robokassa") {
     // Генерация ссылки для Robokassa
@@ -118,7 +116,11 @@ async function generateSecondPaymentLink(buy, email) {
     return { paymentLink, paymentId };
   } else if (actionInfo.paymentSystem === "stripeEUR") {
     // Генерация ссылки для Stripe
-    const priceId = await createStripePriceEUR(actionInfo.sum, currency, ds);
+    const priceId = await createStripePriceEUR(
+      actionInfo.sum,
+      currency,
+      studio
+    );
     const paymentLink = await createStripePaymentLink(priceId, paymentId);
     return { paymentLink, paymentId };
   } else {
@@ -420,6 +422,53 @@ const actionData = {
     paymentSystem: "stripeAMD",
     studio: "ул. Бузанда",
   },
+  buy_5400_handstand_rub: {
+    sum: 5400,
+    lessons: 1,
+    tag: "handstand",
+    currency: "RUB",
+    paymentSystem: "robokassa",
+    studio: "handstand",
+  },
+  buy_2700_handstand_rub: {
+    sum: 2700,
+    lessons: 1,
+    tag: "handstand",
+    currency: "RUB",
+    paymentSystem: "robokassa",
+    studio: "handstand",
+  },
+  buy_59_handstand_eur: {
+    sum: 59,
+    lessons: 1,
+    tag: "handstand",
+    currency: "EUR",
+    paymentSystem: "stripeEUR",
+    studio: "handstand",
+  },
+  buy_29_handstand_eur: {
+    sum: 29,
+    lessons: 1,
+    tag: "handstand",
+    currency: "EUR",
+    paymentSystem: "stripeEUR",
+    studio: "handstand",
+  },
+  buy_950_powertest_ru: {
+    sum: 950,
+    lessons: 1,
+    tag: "super_calisthenics_start",
+    currency: "RUB",
+    paymentSystem: "robokassa",
+    studio: "super_calisthenics",
+  },
+  buy_10_powertest_eur: {
+    sum: 10,
+    lessons: 1,
+    tag: "super_calisthenics_start",
+    currency: "EUR",
+    paymentSystem: "stripeEUR",
+  },
 };
 
 // Объект с данными для различных типов кнопок
@@ -642,10 +691,22 @@ const studioDetails = {
     paymentSystem: "robokassa",
   },
   "ул. Бузанда": {
-    price: 500,
+    price: 5000,
     currency: "AMD",
     tag: "01YVN_group_GFG_start",
     paymentSystem: "stripeAMD", // Использовать Stripe для Еревана
+  },
+  handstand_ru: {
+    price: 5400,
+    currency: "RUB",
+    tag: "handstand",
+    paymentSystem: "robokassa",
+  },
+  handstand_eur: {
+    price: 54,
+    currency: "EUR",
+    tag: "handstand",
+    paymentSystem: "stripeEUR",
   },
 };
 
@@ -662,6 +723,10 @@ function getPriceAndSchedule(studio) {
       "Адрес студии м. Московские Ворота.:\nУл. Заставская, 33П\n\n🔻 Расписание занятий:\nВторник 20:40\nЧетверг 20:40\nСуббота 14:00\n\n🔻 Стоимость тренировок:\n👉🏻Пробное - 950₽ (действует 4 недели)\n👉🏻12 занятий - 9600₽ (действует 4 недели)\n👉🏻12 занятий - 11400₽ (действует 6 недель)\n👉🏻1 занятие - 1100₽ (действует 4 недели)\n\n🔻 Цены индивидуальных тренировок:\n1 тренировка (1 чел.) - 3600₽ за занятие\n1 тренировка (2 чел.) - 5000₽ за занятие\n1 тренировка (3 чел.) - 6000₽ за занятие",
     "ул. Бузанда":
       "Адрес студии на ул. Бузанда.:\nУл. Павстоса Бузанда, 1/3\n\n🔻 Расписание занятий:\nПонедельник 08:30 (утро) \nСреда 08:30 (утро) \nПятница 08:30 (утро) \n\n🔻 Стоимость тренировок:\n👉🏻Пробное - 5000դր. (действует 4 недели)\n👉🏻12 занятий - 60000դր. (действует 6 недель)\n👉🏻1 занятие - 7000դր. (действует 4 недели)\n\n🔻 Цены индивидуальных тренировок:\n1 тренировка (1 чел.) - 12500դր. за занятие\n1 тренировка (2 чел.) - 17000դր. за занятие\n1 тренировка (3 чел.) - 21000դր. за занятие",
+    super_calisthenics:
+      "Стоимость онлайн-курса «SuperCalisthenics»:\n👉🏻 12 занятий (доступ 6 недель):\n9600₽ | 105€\n👉🏻 36 занятий (доступ 14 недель):\n23400₽ | 249€\n👉🏻 Пробная тренировка (тест-силы)\n950₽ | 10€",
+    handstand:
+      "Курс «Cногшибательная стойка на руках»\n👉🏻 С тренером: 5400₽ | 59€ \n👉🏻 Только видео-уроки: 2700₽ | 29€",
   };
 
   return (
@@ -970,6 +1035,10 @@ bot.command("start", async (ctx) => {
   console.log(`Ник: ${user.username || "не указан"}`);
   console.log(`Команда /start от пользователя: ${user.id}`);
 
+  // Получаем параметры после /start
+  const args = ctx.message.text.split(" ");
+  const startParam = args[1] || null; // Получаем значение параметра (online/offline)
+
   try {
     await Session.findOneAndUpdate(
       { userId: ctx.from.id.toString() },
@@ -1000,18 +1069,53 @@ bot.command("start", async (ctx) => {
       const session = await Session.findOne({ userId: ctx.from.id.toString() });
       session.airtableId = airtableId; // Сохраняем airtableId в сессии
       await session.save();
-      console.log("Отправил список городов");
-      await ctx.reply(
-        "Привет! Подскажите, пожалуйста, какой город вас интересует?",
-        {
+
+      if (startParam === "online") {
+        console.log("Пользователь пришел по URL для online.");
+        // Покажите начальное меню для online
+        await ctx.reply(
+          "Привет! Подскажите, пожалуйста, какой курс вас интересует?",
+          {
+            reply_markup: new InlineKeyboard()
+              .add({
+                text: "Онлайн-курс «SuperCalisthenics»",
+                callback_data: "super_calisthenics",
+              })
+              .row()
+              .add({
+                text: "Оналйн-курс «Стойка на руках»",
+                callback_data: "handstand",
+              }),
+          }
+        );
+      } else if (startParam === "offline") {
+        console.log("Пользователь пришел по URL для offline.");
+        // Покажите начальное меню для offline
+        await ctx.reply(
+          "Привет! Подскажите, пожалуйста, какой город вас интересует?",
+          {
+            reply_markup: new InlineKeyboard()
+              .add({ text: "Москва", callback_data: "city_moscow" })
+              .row()
+              .add({ text: "Санкт-Петербург", callback_data: "city_spb" })
+              .row()
+              .add({ text: "Ереван", callback_data: "city_yerevan" }),
+          }
+        );
+      } else {
+        // Если параметр не указан или не распознан
+        console.log("Параметр не указан или не распознан.");
+        await ctx.reply("Привет! Подскажите, пожалуйста, что вас интересует?", {
           reply_markup: new InlineKeyboard()
+            .add({ text: "Онлайн-курсы", callback_data: "online" })
+            .row()
             .add({ text: "Москва", callback_data: "city_moscow" })
             .row()
             .add({ text: "Санкт-Петербург", callback_data: "city_spb" })
             .row()
             .add({ text: "Ереван", callback_data: "city_yerevan" }),
-        }
-      );
+        });
+      }
     }
   } catch (error) {
     console.error("Произошла ошибка:", error);
@@ -1104,7 +1208,7 @@ bot.on("callback_query:data", async (ctx) => {
     // Обновляем запись в Airtable
     await updateAirtableRecord(session.airtableId, session.city, studio);
 
-    // Отправляем сообщение с выбором студии
+    // Отправляем сообщение с основным меню
     await ctx.reply(
       "Наши тренировки помогут вам:\n▫️Стать сильнее\n▫️Повысить тонус\n▫️Научиться владеть телом\n▫️Найти друзей и единомышленников\n\nВоспользуйтесь нижним меню, чтобы выбрать нужную команду.",
       {
@@ -1132,9 +1236,96 @@ bot.on("callback_query:data", async (ctx) => {
         .add({ text: "Ереван", callback_data: "city_yerevan" }),
     });
   }
+  if (action === "online") {
+    // Сохраняем выбранный формат
+    session.city = "online";
+    await session.save();
+
+    // Обновляем запись в Airtable
+    await updateAirtableRecord(session.airtableId, session.city, "");
+
+    // Отправляем сообщение с основным меню
+    await ctx.reply("Выберите, пожалуйста, курс:", {
+      reply_markup: new InlineKeyboard()
+        .add({
+          text: "Онлайн-курс «SuperCalisthenics»",
+          callback_data: "super_calisthenics",
+        })
+        .row()
+        .add({
+          text: "Оналйн-курс «Стойка на руках»",
+          callback_data: "handstand",
+        }),
+    });
+  }
+
+  if (action === "super_calisthenics" || action === "handstand") {
+    let course;
+    if (action === "super_calisthenics") {
+      course = "super_calisthenics";
+      console.log("Выбрал SuperCalisthenics, отправил основное меню");
+
+      session.city = "online";
+      session.studio = "super_calisthenics";
+      await session.save();
+
+      // Обновляем запись в Airtable
+      await updateAirtableRecord(
+        session.airtableId,
+        session.city,
+        session.studio
+      );
+
+      // Отправляем сообщение с основным меню
+      await ctx.reply(
+        "Наш флагманский курс — SuperCalisthenics — это инновационный онлайн-курс, где тренировки адаптируются под ваш уровень физической подготовки и цели.\nВоспользуйтесь нижним меню, чтобы выбрать нужную команду.",
+        {
+          reply_markup: new Keyboard()
+            .text("📝 Записаться на курс")
+            .row()
+            .text("🤸🏼‍♀️ Как проходят занятия")
+            .text("💰 Цены")
+            .row()
+            .text("⬅️ Назад")
+            .text("❓ FAQ")
+            .resized(), // делает клавиатуру компактной
+        }
+      );
+    } else if (action === "handstand") {
+      course = "handstand";
+      console.log("Выбрал Стойка на руках, отправил основное меню");
+
+      session.city = "online";
+      session.studio = "handstand";
+      await session.save();
+      // Обновляем запись в Airtable
+      await updateAirtableRecord(
+        session.airtableId,
+        session.city,
+        session.studio
+      );
+
+      // Отправляем сообщение с основным меню
+      await ctx.reply(
+        "Стойка на руках — это одно из лучших упражнений для развития силы и чувства баланса. А еще это классное достижение, которое будет тебя всегда радовать.\nВоспользуйтесь нижним меню, чтобы выбрать нужную команду.",
+        {
+          reply_markup: new Keyboard()
+            .text("📝 Записаться на курс")
+            .row()
+            .text("🤸🏼‍♀️ Про курс")
+            .text("💰 Цены")
+            .row()
+            .text("⬅️ Назад")
+            .text("❓ FAQ")
+            .resized(), // делает клавиатуру компактной
+        }
+      );
+    }
+  }
+
   if (action === "deposit") {
     console.log("Нажал кнопку пополнить депозит");
-    userState[ctx.from.id] = { awaitingDeposit: true };
+    session.userState = { awaitingDeposit: true };
     await ctx.reply("Введите сумму депозита:");
     await ctx.answerCallbackQuery();
     return;
@@ -1168,23 +1359,45 @@ bot.on("callback_query:data", async (ctx) => {
           -4510303967,
           `Заявка на тренировку в ${session.studio}\nИмя: ${
             session.name
-          }\nТел: ${session.phone}\nEmail: ${session.email}\nНик: ${
+          }\nТел: ${session.phone}\nEmail: ${session.email}\nНик: @${
             ctx.from?.username || "не указан"
-          }]\nID: ${ctx.from?.id}`
+          }\nID: ${ctx.from?.id}`
         );
       } catch (error) {
         console.error(`Не удалось отправить сообщение`, error);
       }
 
-      await ctx.reply("Спасибо! На какую тренировку хотите записаться?", {
-        reply_markup: new InlineKeyboard()
-          .add({ text: "Групповую", callback_data: "group_training" })
-          .row()
-          .add({
-            text: "Персональную (или сплит)",
-            callback_data: "personal_training",
-          }),
-      });
+      if (
+        session.studio === "super_calisthenics" ||
+        session.studio === "handstand"
+      ) {
+        await ctx.reply(
+          "Спасибо! Какой картой вам будет удобнее оплатить курс?",
+          {
+            reply_markup: new InlineKeyboard()
+              .add({ text: "Российской картой", callback_data: "russian_card" })
+              .row()
+              .add({
+                text: "Зарубежной картой",
+                callback_data: "foreign_card",
+              }),
+          }
+        );
+        session.step = "awaiting_card_type";
+        await session.save(); // Сохранение сессии после изменения шага
+      } else {
+        await ctx.reply("Спасибо! На какую тренировку хотите записаться?", {
+          reply_markup: new InlineKeyboard()
+            .add({ text: "Групповую", callback_data: "group_training" })
+            .row()
+            .add({
+              text: "Персональную (или сплит)",
+              callback_data: "personal_training",
+            }),
+        });
+        session.step = "awaiting_training_type";
+        await session.save(); // Сохранение сессии после изменения шага
+      }
 
       // Отправляем данные в Airtable
       await sendToAirtable(
@@ -1195,9 +1408,6 @@ bot.on("callback_query:data", async (ctx) => {
         session.city, // Город пользователя
         session.studio // Студия пользователя
       );
-
-      session.step = "awaiting_training_type";
-      await session.save(); // Сохранение сессии после изменения шага
     }
   } else if (session.step === "awaiting_training_type") {
     if (action === "group_training") {
@@ -1222,6 +1432,109 @@ bot.on("callback_query:data", async (ctx) => {
       session.step = "awaiting_personal_training_details";
       await session.save();
     }
+  } else if (session.step === "awaiting_card_type") {
+    if (action === "russian_card") {
+      console.log("Выбрали россискую карту, отправляю тарифы");
+      // Получаем данные студии из сессии и telegram_id
+
+      if (session.studio === "super_calisthenics") {
+        console.log("Отправляю тарифы");
+        await ctx.reply("Выберите подходящий тариф для оплаты:", {
+          reply_markup: new InlineKeyboard()
+            .add({
+              text: "Пробное (950₽) - доступ 4 недели",
+              callback_data: "buy_950_powertest_ru",
+            })
+            .row()
+            .add({
+              text: "12 занятий (9600₽) - доступ 6 недель",
+              callback_data: "buy_9600_ds_rub",
+            })
+            .row()
+            .add({
+              text: "36 занятий (23400₽) - доступ 14 недель",
+              callback_data: "buy_23400_ds_rub",
+            }),
+        });
+        session.step = "online_buttons";
+        await session.save(); // Сохранение сессии после изменения шага
+      } else if (session.studio === "handstand") {
+        console.log("Отправляю тарифы");
+        await ctx.reply("Выберите подходящий тариф для оплаты:", {
+          reply_markup: new InlineKeyboard()
+            .add({
+              text: "Курс с тренером 5400₽",
+              callback_data: "buy_5400_handstand_rub",
+            })
+            .row()
+            .add({
+              text: "Только видео-уроки 2700₽",
+              callback_data: "buy_2700_handstand_rub",
+            }),
+        });
+        session.step = "online_buttons";
+        await session.save(); // Сохранение сессии после изменения шага
+      }
+    } else if (action === "foreign_card") {
+      console.log("Выбрали зарбужную карту, отправляю тарифы");
+      if (session.studio === "super_calisthenics") {
+        console.log("Отправляю тарифы");
+        await ctx.reply("Выберите подходящий тариф для оплаты:", {
+          reply_markup: new InlineKeyboard()
+            .add({
+              text: "Пробное (тест-силы) 10€ - действует 4 недели",
+              callback_data: "buy_10_powertest_eur",
+            })
+            .row()
+            .add({
+              text: "12 занятий (105€) - действует 6 недель",
+              callback_data: "buy_105_ds_eur",
+            })
+            .row()
+            .add({
+              text: "36 занятий (249€) - действует 14 недель",
+              callback_data: "buy_249_ds_eur",
+            }),
+        });
+        session.step = "online_buttons";
+        await session.save(); // Сохранение сессии после изменения шага
+      } else if (session.studio === "handstand") {
+        console.log("Отправляю тарифы");
+        await ctx.reply("Выберите подходящий тариф для оплаты:", {
+          reply_markup: new InlineKeyboard()
+            .add({
+              text: "Курс с тренером 59€",
+              callback_data: "buy_59_handstand_eur",
+            })
+            .row()
+            .add({
+              text: "Только видео-уроки 29€",
+              callback_data: "buy_29_handstand_eur",
+            }),
+        });
+        session.step = "online_buttons";
+        await session.save(); // Сохранение сессии после изменения шага
+      }
+    }
+  } else if (session.step === "online_buttons") {
+    console.log("генерирую ссылку для оплаты после нажатия кнопки с тарифом");
+    // Генерация ссылки для оплаты
+    const actionInfo = actionData[ctx.callbackQuery.data];
+    const { paymentLink, paymentId } = await generateSecondPaymentLink(
+      action,
+      session.email
+    );
+
+    // Отправляем пользователю ссылку на оплату
+    await ctx.reply(`Для оплаты перейдите по ссылке: ${paymentLink}`);
+
+    await thirdTwoToAirtable(
+      ctx.from.id,
+      paymentId,
+      actionInfo.sum,
+      actionInfo.lessons,
+      actionInfo.tag
+    );
   } else if (action.startsWith("day")) {
     console.log("Выбрал дату групповой тренировки");
     const buttonText = action.split(",")[1];
@@ -1327,7 +1640,7 @@ bot.on("message:text", async (ctx) => {
   const userMessage = ctx.message.text;
   const tgId = ctx.from.id;
 
-  if (userState[tgId] && userState[tgId].awaitingDeposit) {
+  if (session.userState && session.userState.awaitingDeposit) {
     const text = ctx.message.text.trim().toLowerCase();
     const sum = parseFloat(text);
     if (isNaN(sum) || sum <= 0) {
@@ -1357,7 +1670,7 @@ bot.on("message:text", async (ctx) => {
     );
 
     // Сбрасываем состояние пользователя
-    delete userState[tgId];
+    delete session.userState;
     return;
   }
   // Проверка на ожидаемый ответ о времени тренировки
@@ -1404,7 +1717,10 @@ bot.on("message:text", async (ctx) => {
   }
 
   // Обработка кнопок для студий
-  if (userMessage === "Записаться на тренировку") {
+  if (
+    userMessage === "Записаться на тренировку" ||
+    userMessage === "📝 Записаться на курс"
+  ) {
     console.log("Нажал на кнопку - записаться на тренировку");
     // Удаляем стационарное меню
     await ctx.reply("Пожалуйста, введите ваше ФИО:", {
@@ -1568,10 +1884,38 @@ bot.on("message:text", async (ctx) => {
     await ctx.reply(
       "У нас не обычные групповые тренировки, где все ученики делают одинаковые задания — у нас персональный подход.\n\nНа первом занятии тренер определит ваш уровень физической подготовки и обсудит основные цели. После этого все тренировки будут написаны с учетом вашего уровня и целей 🔥\n\nМы это делаем с помощью мобильного приложения, где у вас будет свой личный кабинет, история тренировок и результаты❗️\n\nТак мы добиваемся наиболее эффективного подхода для наших учеников 🤍"
     );
+  } else if (userMessage === "🤸🏼‍♀️ Как проходят занятия") {
+    console.log("Нажал на кнопку - 🤸🏼‍♀️ Как проходят занятия");
+    await ctx.reply(
+      "SuperCalisthenics — это онлайн-курс, который адаптируется под ваш уровень и цели! Начнем с теста-силы из 7 упражнений, который вы выполняете по нашей инструкции и снимаете на видео. Наш тренер внимательно анализирует результаты и дает обратную связь, чтобы помочь вам стартовать максимально эффективно.\n\nВсе тренировки сохраняются в нашем приложении с видео-демонстрациями и инструкциями. Вы сможете осваивать подтягивания, отжимания, стойки на руках и многое другое, точно зная, как выполнять каждое движение. Тренировки проходят в удобное для вас время, и на начальном этапе вы можете снимать по одному подходу каждого упражнения — это помогает тренеру корректировать технику и следить за вашим прогрессом.\n\nОставляйте свои комментарии к программе: тренировки адаптируются под ваши нужды, учитывая ваши сильные и слабые стороны. Присоединяйтесь к SuperCalisthenics и достигайте новых высот с уверенностью и поддержкой!"
+    );
+  } else if (userMessage === "🤸🏼‍♀️ Про курс") {
+    console.log("Нажал на кнопку - 🤸🏼‍♀️ Про курс");
+    await ctx.reply(
+      "Онлайн-курс «Сногшибательная стойка на руках»\n\nПогрузитесь в мир стойки на руках — это не только упражнение для развития силы и чувства баланса, но и великолепное достижение, которое будет вас всегда вдохновлять.\n\nНаша 21-дневная программа собрала все наши знания и наиболее эффективные упражнения, чтобы научить вас мастерству стойки на руках.\n\nПреимущество курса — все занятия можно проходить дома, не требует специального оборудования."
+    );
   } else if (userMessage === "Цены и расписание") {
     console.log("Нажал на кнопку - Цены и расписание");
     const priceAndSchedule = getPriceAndSchedule(session.studio);
     await ctx.reply(priceAndSchedule);
+  } else if (userMessage === "💰 Цены") {
+    console.log("Нажал на кнопку - 💰 Цены");
+    const priceAndSchedule = getPriceAndSchedule(session.studio);
+    await ctx.reply(priceAndSchedule);
+  } else if (userMessage === "⬅️ Назад") {
+    console.log("Нажал на кнопку - ⬅️ Назад");
+    await ctx.reply("Выберите какой курс вас интересует?", {
+      reply_markup: new InlineKeyboard()
+        .add({
+          text: "Онлайн-курс «SuperCalisthenics»",
+          callback_data: "super_calisthenics",
+        })
+        .row()
+        .add({
+          text: "Оналйн-курс «Стойка на руках»",
+          callback_data: "handstand",
+        }),
+    });
   } else if (userMessage === "Назад") {
     console.log("Нажал на кнопку - Назад");
     // Удаляем стационарное меню
@@ -1617,6 +1961,17 @@ bot.on("message:text", async (ctx) => {
         reply_markup: new InlineKeyboard().url(
           "Читать FAQ",
           "https://telegra.ph/I-Do-Calisthenics-FAQ-02-06"
+        ),
+      }
+    );
+  } else if (userMessage === "❓ FAQ") {
+    console.log("нажал кнопку ❓ FAQ");
+    await ctx.reply(
+      "По ссылке ниже вы найдете ответы на часто задаваемые вопросы о наших тренировках. \n\nКому подходят такие тренировки, есть ли противопоказания, нужен ли инвентарь, как приобрести подарочный сертификат и другие вопросы. \n\nЕсли вы не нашли ответ на свой вопрос, напишите нашему менеджеру Никите @IDC_Manager. ↘️",
+      {
+        reply_markup: new InlineKeyboard().url(
+          "Читать FAQ",
+          "https://telegra.ph/I-Do-Calisthenics-Online-FAQ-02-17"
         ),
       }
     );
