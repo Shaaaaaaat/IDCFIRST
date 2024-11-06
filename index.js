@@ -423,7 +423,7 @@ const actionData = {
     studio: "ул. Бузанда",
   },
   buy_5400_handstand_rub: {
-    sum: 5400,
+    sum: 54,
     lessons: 1,
     tag: "handstand",
     currency: "RUB",
@@ -439,7 +439,7 @@ const actionData = {
     studio: "handstand",
   },
   buy_59_handstand_eur: {
-    sum: 59,
+    sum: 1,
     lessons: 1,
     tag: "handstand",
     currency: "EUR",
