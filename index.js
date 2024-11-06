@@ -100,7 +100,6 @@ async function generateSecondPaymentLink(buy, email) {
   const currency = actionInfo.currency;
   const studio = actionInfo.studio;
   const e = email;
-  const ds = "online";
 
   if (actionInfo.paymentSystem === "robokassa") {
     // Генерация ссылки для Robokassa
@@ -117,7 +116,11 @@ async function generateSecondPaymentLink(buy, email) {
     return { paymentLink, paymentId };
   } else if (actionInfo.paymentSystem === "stripeEUR") {
     // Генерация ссылки для Stripe
-    const priceId = await createStripePriceEUR(actionInfo.sum, currency, ds);
+    const priceId = await createStripePriceEUR(
+      actionInfo.sum,
+      currency,
+      studio
+    );
     const paymentLink = await createStripePaymentLink(priceId, paymentId);
     return { paymentLink, paymentId };
   } else {
@@ -1024,6 +1027,10 @@ app.use(bodyParser.json()); // Используем JSON для обработк
 
 // Обработчик команд бота
 bot.command("start", async (ctx) => {
+  // Удаление текущего стационарного меню
+  await ctx.reply("", {
+    reply_markup: { remove_keyboard: true }, // Удаление старого меню
+  });
   const user = ctx.from;
   console.log("Новый запуск от пользователя:");
   console.log(`ID: ${user.id}`);
