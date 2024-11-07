@@ -1639,10 +1639,13 @@ bot.on("callback_query:data", async (ctx) => {
     );
   } else if (action.startsWith("a_net")) {
     console.log("НЕТ - не планиурет продолжать тренировки с нами");
-    await ctx.reply(`Ну жаль`);
+    // Отправляем сообщение с просьбой поделиться причиной отказа
+    await ctx.reply(
+      "Очень жаль, что вы решили не продолжать тренировки с нами. Пожалуйста, расскажите, почему вы приняли такое решение. Может быть, что-то не понравилось или у вас есть вопросы? Нам важно ваше мнение, чтобы стать лучше!"
+    );
 
-    // Сохраняем статус ожидания даты
-    session.step = "awaiting_later_date";
+    // Устанавливаем шаг в сессии для обработки ответа пользователя
+    session.step = "awaiting_feedback";
     await session.save();
   }
 });
@@ -1723,6 +1726,30 @@ bot.on("message:text", async (ctx) => {
       reply_markup: keyboard,
     });
 
+    session.step = "completed";
+    await session.save();
+  }
+
+  if (session.step === "awaiting_feedback") {
+    // Получаем имя пользователя для передачи в отчёт
+    const username = ctx.from.username ? `@${ctx.from.username}` : "Без ника";
+
+    // Отправляем сообщение в канал/чат для отчетов
+    try {
+      await bot.api.sendMessage(
+        -4510303967, // Замените на ID чата, куда отправлять отчет
+        `Пользователь ${username} отказался от тренировок и оставил отзыв:\n"${ctx.message.text}"`
+      );
+    } catch (error) {
+      console.error("Не удалось отправить сообщение с отзывом:", error);
+    }
+
+    // Благодарим пользователя за обратную связь
+    await ctx.reply(
+      "Спасибо, что поделились! Ваше мнение поможет нам стать лучше."
+    );
+
+    // Сбрасываем статус после получения обратной связи
     session.step = "completed";
     await session.save();
   }
