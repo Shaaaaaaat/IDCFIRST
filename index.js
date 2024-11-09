@@ -1535,11 +1535,11 @@ bot.on("callback_query:data", async (ctx) => {
       actionInfo.tag
     );
   } else if (action.startsWith("day")) {
-    console.log("Выбрал дату групповой тренировки");
     const buttonText = action.split(",")[1];
     const date = buttonText.match(/\(([^)]+)\)/);
     const str = JSON.stringify(date[1]);
     const str2 = JSON.parse(str);
+    console.log(`Выбрал дату групповой тренировки - ${str2}`);
 
     // Генерация ссылки на оплату и получение paymentId
     const { paymentLink, paymentId } = await generatePaymentLinkFirst(
@@ -1761,7 +1761,7 @@ bot.on("message:text", async (ctx) => {
   ) {
     console.log("Нажал на кнопку - записаться на тренировку");
     // Удаляем стационарное меню
-    await ctx.reply("Пожалуйста, введите ваше ФИО:", {
+    await ctx.reply("Пожалуйста, введите вашу фамилию и имя:", {
       reply_markup: {
         remove_keyboard: true, // Удаляет текущее стационарное меню
       },
