@@ -381,6 +381,7 @@ const actionData = {
     tag: "ds_eur",
     currency: "EUR",
     paymentSystem: "stripeEUR",
+    studio: "super_calisthenics",
   },
   buy_249_ds_eur: {
     sum: 249,
@@ -388,6 +389,7 @@ const actionData = {
     tag: "ds_eur",
     currency: "EUR",
     paymentSystem: "stripeEUR",
+    studio: "super_calisthenics",
   },
   buy_60000_yvn_gfg: {
     sum: 60000,
@@ -467,6 +469,7 @@ const actionData = {
     tag: "super_calisthenics_start",
     currency: "EUR",
     paymentSystem: "stripeEUR",
+    studio: "super_calisthenics",
   },
 };
 
