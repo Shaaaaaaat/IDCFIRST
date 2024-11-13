@@ -1113,6 +1113,7 @@ async function thirdTwoToAirtable(tgId, invId, sum, lessons, tag) {
 const app = express();
 app.use(bodyParser.json()); // Используем JSON для обработки запросов от Telegram и Робокассы
 
+
 // Обработчик команд бота
 bot.command("start", async (ctx) => {
   const user = ctx.from;
@@ -1122,47 +1123,11 @@ bot.command("start", async (ctx) => {
   console.log(`Фамилия: ${user.last_name || "не указана"}`);
   console.log(`Ник: ${user.username || "не указан"}`);
   console.log(`Команда /start от пользователя: ${user.id}`);
-
-  // Получаем параметры после /start
-  const args = ctx.message.text.split(" ");
-  const startParam = args[1] || null; // Получаем значение параметра (online/offline)
-
-  try {
-    await Session.findOneAndUpdate(
-      { userId: ctx.from.id.toString() },
-      { userId: ctx.from.id.toString(), step: "start" },
-      { upsert: true }
-    );
-
-    const fullName = `${ctx.from.first_name} ${
-      ctx.from.last_name || ""
-    }`.trim();
-
-    const tgId = ctx.from.id; // Сохранение tgId пользователя
-    // Проверка наличия пользователя в Airtable
-    const userExists = await checkUserInAirtable(tgId);
-
-    if (userExists) {
-await ctx.reply(
+  await ctx.reply(
     "Этот бот переехал! Теперь его можно найти здесь: @IDCMAIN_bot 🎉"
   );
-    } else {
-      console.log("Пользователя нет в базе Clients");
-      // Сохраняем идентификатор записи в сессии
-      const airtableId = await sendFirstAirtable(
-        ctx.from.id,
-        fullName,
-        ctx.from.username
-      );
-      const session = await Session.findOne({ userId: ctx.from.id.toString() });
-      session.airtableId = airtableId; // Сохраняем airtableId в сессии
-      await session.save();
+});
 
-      await ctx.reply(
-    "Этот бот переехал! Теперь его можно найти здесь: @IDCMAIN_bot 🎉"
-  );}
-
-}});
 
 // Обработчик выбора города
 bot.on("callback_query:data", async (ctx) => {
